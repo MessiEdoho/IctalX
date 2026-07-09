@@ -1,0 +1,1 @@
+This repository contains Python scripts for a seizure detection web-server for preclinical researches working with pilocarpine mouse model of epilepsy
