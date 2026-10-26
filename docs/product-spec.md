@@ -176,7 +176,10 @@ A file is rejected, with a clear message, if any check fails. A rejected file is
 | V06 | Removed. Segments with NaN, infinite or extreme values are dropped silently (section 7.1, step 5); the file is not rejected. | |
 | V07 | File size is 2 GB or less | "Files larger than 2 GB are not supported." |
 | V08 | Recording is at least one segment long (5 s) | "The recording is shorter than 5 s." |
-| V09 | EDF header has a recording start date and time | "This EDF file has no recording start time." |
+| V09 | EDF header has a recording start date and time. A blank or all-zero date counts as missing | "This EDF file has no recording start time." |
+| V10 | CSV time column, if named, contains numbers that increase and match the sampling rate (median step within 1%) | "The time column must increase steadily and match the sampling rate." |
+| V11 | CSV start time, if given, is a date and time | "Start time not understood. Use YYYY-MM-DD hh:mm:ss." |
+| V12 | CSV unit is µV or mV | "Unit must be µV or mV." |
 
 ### 6.4 Analysis ID
 
@@ -328,23 +331,25 @@ The interface tells the user, once, that results are not saved on the server and
 
 ### 9.1 events.csv
 
-One row per event.
+One row per event, in time order. Columns, in this order (`ictalx/exports.py`, `CSV_COLUMNS`):
 
-| Column | Example |
-| --- | --- |
-| analysis_id | AX-7F3C2A |
-| event_id | EV-001 |
-| onset_s | 1812.40 |
-| offset_s | 1864.40 |
-| duration_s | 52.00 |
-| onset_elapsed | 00h30m12.4 |
-| onset_clock | 2022-12-10 17:28:15.400 |
-| peak_uV | 412 |
-| kurtosis | 6.8 |
-| skewness | 0.42 |
-| envelope | 0.71 |
-| probability (mean) | 0.97 |
-| status | confirmed |
+| Column | Meaning | Example (m427 slice) |
+| --- | --- | --- |
+| analysis_id | Short analysis ID | AX-7F3C2A |
+| event_id | EV-001, EV-002, ... in time order | EV-001 |
+| onset_s | Event start, seconds from recording start | 850.0 |
+| offset_s | Event end, seconds from recording start | 885.0 |
+| duration_s | offset_s − onset_s | 35.0 |
+| onset_elapsed | Onset as HHhMMmSS.s, the format of `eval_utils.evaluate_event_level` | 00h14m10.0 |
+| offset_elapsed | Offset as HHhMMmSS.s | 00h14m45.0 |
+| onset_clock | Onset as date and time; blank without a start time | 2022-12-13 12:35:33.000 |
+| offset_clock | Offset as date and time; blank without a start time | 2022-12-13 12:36:08.000 |
+| peak_uV | Section 7.5 | 3359.949 |
+| kurtosis | Section 7.5 | 19.2316 |
+| skewness | Section 7.5 | −2.5081 |
+| envelope_uV | Section 7.5 | 310.49 |
+| probability | Mean smoothed probability, section 7.4 | 0.949695 |
+| status | pending, confirmed or rejected | confirmed |
 
 ### 9.2 Summary report (.zip)
 
@@ -353,8 +358,8 @@ Built by the backend.
 | File | Content |
 | --- | --- |
 | `events.csv` | As above |
-| `summary.json` | Analysis ID, file name, channel, sampling rate, duration, pipeline version, model version, counts by status |
-| `events/EV-001_waveform.png` | Event window (section 7.6) with the seizure highlighted |
+| `summary.json` | Analysis ID, creation time, IctalX version; file name, format, channel, sampling rate, samples, duration, start; segments, removed segments, contiguous chunks, events, counts by review status; training commit, model, weights SHA-256, post-processing settings |
+| `events/EV-001_waveform.png` | Event window (section 7.6), preprocessed signal, seizure shaded, gaps hatched and labelled |
 | `events/EV-001_spectrogram.png` | 0 Hz to fs / 2 spectrogram of the same window, seizure outlined in red |
 | `README.txt` | Column definitions and citation |
 
@@ -392,12 +397,12 @@ The prototype's "Edit mode" toolbar is a design tool and is removed from the pro
 
 ### 10.3 Progress
 
-While the pipeline runs, the button area shows:
+While a detection runs, the button area shows:
 
-1. Upload progress, as a percentage.
-2. The current stage: validating, preprocessing, inference, post-processing.
-3. A progress bar for inference, based on segments done out of total.
-4. A Cancel button.
+1. Upload progress, as a percentage (measured in the browser).
+2. The stage reported by the server: `queued` (with place in the queue), `detecting` (preprocessing and inference run together, block by block), `event windows` (descriptors and display data), then `done`, `failed` or `cancelled`.
+3. A progress bar during `detecting`: segments processed out of all segments on the grid.
+4. A Cancel button. Cancelling stops the job and deletes the uploaded file.
 
 ### 10.4 Review workspace
 
@@ -439,18 +444,38 @@ Recording length, number of events, total ictal time, average confidence, review
 
 ## 12. API
 
+Implemented in `ictalx/server.py` (FastAPI). Detection runs as a background job: `/api/detect` answers at once with an analysis ID, and the interface polls `/api/analyses/{id}` until the job is done.
+
 | Method | Path | Purpose | Request | Response |
 | --- | --- | --- | --- | --- |
 | GET | `/` | Serve the interface | | HTML |
-| POST | `/api/detect` | Validate and run detection | Multipart: file + metadata | Analysis ID, events, descriptors, summary; or validation error with code |
-| GET | `/api/events/{analysis_id}/{event_id}` | Waveform and spectrogram data for one event | | JSON |
-| POST | `/api/review` | Save a decision | Analysis ID, event ID, status | Updated event |
-| GET | `/api/report` | Download results | Analysis ID, format (`csv` or `zip`) | File |
-| GET | `/api/samples` | List or fetch sample files | Optional file name | JSON list or file |
+| POST | `/api/detect` | Upload, validate, queue detection | Multipart: `file`, `file_format` (EDF or CSV); EDF: `channel`; CSV: `signal_column`, `sampling_rate`, `unit`, optional `time_column`, `start_time` | 202 with `analysis_id`, `short_id`, `status`; or 422 with `code` and `message` (section 6.3) |
+| GET | `/api/analyses/{id}` | Job status; results when done | | `status`, `stage`, `queue_position`, `processed_segments`, `total_segments`, `error`; when done also `summary` and `events` (the events.csv fields plus `max_prob`) |
+| POST | `/api/analyses/{id}/cancel` | Stop a queued or running job | | New status |
+| GET | `/api/events/{id}/{event_id}` | Display data for one event | | Window start and end, onset, offset; waveform as 1,200 min/max columns with a status per column; spectrogram times, frequencies and dB values (null for columns touching gaps) |
+| POST | `/api/review` | Save a decision | JSON: `analysis_id`, `event_id`, `status` | Saved status |
+| GET | `/api/report` | Download results | `analysis_id`, `format` = `csv` or `zip` | File |
+| GET | `/api/samples` | List sample files | | Names and sizes |
+| GET | `/api/samples/{name}` | Download one sample file | | File |
 
-The `/api/events` route is new compared with the diagram. It lets the detail view load one event at a time instead of sending every window at once.
+Compared with the architecture diagram, `/api/analyses/{id}`, its `cancel` route and `/api/samples/{name}` are new; they are needed because detection runs in the background.
 
-Error responses use the validation codes in section 6.3.
+An unknown or expired analysis returns 404. Results requested before a job is done return 409.
+
+### 12.1 Server settings
+
+Read from environment variables (`ictalx/config.py`), so the same code runs locally, on AWS and at UCD.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `ICTALX_MODEL_DIR` | `models/` in the repo | Folder with the weights and `best_multiscale_params.json` |
+| `ICTALX_UPLOAD_DIR` | System temp folder / `ictalx_uploads` | Temporary uploads |
+| `ICTALX_SAMPLES_DIR` | `samples/` in the repo | Sample recordings offered for download |
+| `ICTALX_WEB_DIR` | `web/` in the repo | Interface files |
+| `ICTALX_DEVICE` | `cpu` | `cpu` or `cuda` |
+| `ICTALX_WORKERS` | 1 | Detections run at the same time; others wait in order |
+| `ICTALX_BATCH_SIZE` | 256 | Segments per forward pass; does not change results |
+| `ICTALX_SESSION_HOURS` | 3 | Idle time before an analysis is dropped; checked every 5 minutes |
 
 ## 13. Non-functional requirements
 
@@ -549,6 +574,7 @@ Answered questions are kept for the record; the answer is in the section named.
 | 2026-10-26 | Removed segments inside a display window are shown as a labelled gap. |
 | 2026-10-26 | Session length 3 hours with no activity. |
 | 2026-10-26 | Pilot accepts 500 Hz recordings only; other rates are rejected. Support for other rates to be considered later. |
+| 2026-10-26 | Detection runs as a background job with polling; API in section 12 as built. New validation codes V10 to V12 for CSV. |
 | 2026-10-25 | Reference for testing: m427 rows of `test_event_details.csv` (MIN_EVENT_SEC_25s, min_then_refractory). |
 | 2026-10-24 | No database at this stage. Results live in server memory for the session. |
 | 2026-10-24 | Waveform and spectrogram come from the real signal, 120 s before onset to 120 s after offset, with the seizure highlighted. |

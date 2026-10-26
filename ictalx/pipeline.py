@@ -2,8 +2,8 @@
 
 Every signal-processing and model step calls the verbatim training copies in
 `ictalx.training` (DL_WITH_SSL_GA, commit e463396). This module only reads the
-EDF, feeds blocks and segments through those functions in the training order,
-and collects the results.
+signal, feeds blocks and segments through those functions in the training
+order, and collects the results.
 """
 import hashlib
 import json
@@ -28,16 +28,64 @@ class WeightsChecksumError(RuntimeError):
     """The weights file is not the one the pipeline was verified with."""
 
 
+class Cancelled(Exception):
+    """Raised from a progress callback to stop a running detection."""
+
+
+# ---------------------------------------------------------------------------
+# Signal sources: one channel, read block by block
+# ---------------------------------------------------------------------------
+class EdfSource:
+    """One channel of an EDF file, read on demand (header-only open)."""
+
+    unit_to_uv = 1e6                     # MNE returns EDF data in volts
+
+    def __init__(self, path, channel):
+        # include= reads only this channel, so MNE does not upsample it to the
+        # rate of a faster channel in the same file.
+        self.raw = mne.io.read_raw_edf(str(path), include=[channel], preload=False, verbose="ERROR")
+        self.raw.pick([channel])
+        self.channel = channel
+        self.fs = float(self.raw.info["sfreq"])
+        self.n_samples = int(self.raw.n_times)
+        meas_date = self.raw.info["meas_date"]
+        self.start = meas_date.replace(tzinfo=None) if meas_date is not None else None
+
+    def read(self, start, stop):
+        """Calibrated samples [start, stop) as float64.
+
+        Same values as raw.get_data(start=start, stop=stop). get_data is not used
+        because it first builds a time index for the whole recording (3.65 GB for
+        m427).
+        """
+        return self.raw._read_segment(start=start, stop=stop).squeeze().astype(np.float64)
+
+
+class ArraySource:
+    """A signal already in memory, e.g. one CSV column."""
+
+    def __init__(self, samples, fs, start=None, unit_to_uv=1.0, channel="signal"):
+        self.samples = np.asarray(samples)
+        self.fs = float(fs)
+        self.n_samples = len(self.samples)
+        self.start = start
+        self.unit_to_uv = float(unit_to_uv)
+        self.channel = channel
+
+    def read(self, start, stop):
+        return self.samples[start:stop].astype(np.float64)
+
+
 @dataclass
 class DetectionResult:
-    events: list              # dicts from eval_utils.detect_events_in_chunk
+    events: list              # dicts from eval_utils.detect_events_in_chunk, in time order
     t_start_sec: np.ndarray   # start time of every segment on the grid
     y_prob: np.ndarray        # model probability per segment; NaN for removed segments
     kept: np.ndarray          # False for segments removed as extreme (spec 7.1, step 5)
     n_chunks: int             # contiguous runs of kept segments
     fs: float
     n_samples: int
-    recording_start: datetime
+    recording_start: datetime  # None for a CSV without a start time
 
 
 def sha256_file(path):
@@ -73,21 +121,27 @@ def load_model(model_dir, device="cpu"):
     return model
 
 
-def open_edf(path, channel):
-    """Open an EDF header-only and keep the selected channel."""
-    raw = mne.io.read_raw_edf(str(path), preload=False, verbose="ERROR")
-    raw.pick([channel])
-    return raw
+# ---------------------------------------------------------------------------
+# Grid and blocks
+# ---------------------------------------------------------------------------
+def segment_grid(n_samples):
+    return pp.compute_segment_grid(int(n_samples), pp.win_len, pp.step)
 
 
-def read_samples(raw, start, stop):
-    """Calibrated samples [start, stop) of the picked channel, as float64.
+def block_range(starts, first):
+    """Sample range [c0, c1) of the block whose first segment is starts[first]."""
+    group = starts[first:first + pp.segments_per_chunk]
+    return int(group[0]), int(group[-1]) + pp.win_len
 
-    Same values as raw.get_data(start=start, stop=stop). get_data is not used
-    because it first builds a time index for the whole recording (3.65 GB for
-    m427).
+
+def preprocess_block_steps(raw_block, fs):
+    """Steps 1-2 and 1-3 of preprocess_chunk for one block.
+
+    Returns (notch + DC removed, robust z-score). The z-score array is exactly
+    what preprocess_chunk returns: it is the same three calls in the same order.
     """
-    return raw._read_segment(start=start, stop=stop).squeeze().astype(np.float64)
+    step2 = pp.remove_dc(pp.apply_notch_filter(raw_block, fs, pp.notch_freq, pp.notch_Q))
+    return step2, pp.robust_zscore(step2)
 
 
 def is_extreme(segment, threshold=1000.0):
@@ -102,51 +156,50 @@ def is_extreme(segment, threshold=1000.0):
     return float(np.abs(segment).max()) > threshold
 
 
-def iter_preprocessed_blocks(raw, fs):
+def iter_preprocessed_blocks(source):
     """Yield (first_segment_index, segment_starts, block_start, preprocessed_block).
 
     Same grid, 40-segment blocks and preprocessing order as preprocessing_binary.py.
     """
-    starts = pp.compute_segment_grid(int(raw.n_times), pp.win_len, pp.step)
+    starts = segment_grid(source.n_samples)
     for i in range(0, len(starts), pp.segments_per_chunk):
-        group = starts[i:i + pp.segments_per_chunk]
-        c0 = int(group[0])
-        c1 = int(group[-1]) + pp.win_len
-        block = pp.preprocess_chunk(read_samples(raw, c0, c1), fs, pp.notch_freq, pp.notch_Q)
-        yield i, group, c0, block
+        c0, c1 = block_range(starts, i)
+        block = pp.preprocess_chunk(source.read(c0, c1), source.fs, pp.notch_freq, pp.notch_Q)
+        yield i, starts[i:i + pp.segments_per_chunk], c0, block
 
 
-def predict(model, raw, fs, batch_size=256, device="cpu", progress=None):
+# ---------------------------------------------------------------------------
+# Inference and post-processing
+# ---------------------------------------------------------------------------
+def predict(model, source, batch_size=256, device="cpu", progress=None):
     """Segment probabilities for the whole recording.
 
     Returns (t_start_sec, y_prob, kept). Removed segments get NaN and kept=False.
-    progress(scored, total) is called after every batch, if given; total counts all
-    grid segments, including any that end up removed.
+    progress(processed, total) is called after every batch, if given; total counts
+    all grid segments. The callback may raise Cancelled to stop.
     """
-    n_segs = len(pp.compute_segment_grid(int(raw.n_times), pp.win_len, pp.step))
+    n_segs = len(segment_grid(source.n_samples))
     t_start = np.empty(n_segs, dtype=np.float64)
     y_prob = np.full(n_segs, np.nan, dtype=np.float64)
     kept = np.zeros(n_segs, dtype=bool)
     batch, batch_idx = [], []
-    done = 0
+    seen = 0
 
     def flush():
-        nonlocal batch, batch_idx, done
-        if not batch:
-            return
-        x = torch.from_numpy(np.stack(batch)).unsqueeze(1).to(device)    # (B, 1, win_len)
-        with torch.no_grad():
-            probs = torch.sigmoid(model(x)).cpu().numpy()
-        y_prob[batch_idx] = probs
-        done += len(batch)
-        batch, batch_idx = [], []
+        nonlocal batch, batch_idx
+        if batch:
+            x = torch.from_numpy(np.stack(batch)).unsqueeze(1).to(device)    # (B, 1, win_len)
+            with torch.no_grad():
+                y_prob[batch_idx] = torch.sigmoid(model(x)).cpu().numpy()
+            batch, batch_idx = [], []
         if progress:
-            progress(done, n_segs)
+            progress(seen, n_segs)
 
-    for i, group, c0, block in iter_preprocessed_blocks(raw, fs):
+    for i, group, c0, block in iter_preprocessed_blocks(source):
         for j, s in enumerate(group):
             k = i + j
-            t_start[k] = int(s) / fs
+            seen = k + 1
+            t_start[k] = int(s) / source.fs
             segment = block[int(s) - c0:int(s) - c0 + pp.win_len].astype(np.float32)
             if is_extreme(segment):
                 continue
@@ -170,16 +223,11 @@ def detect_events(t_start, y_prob, kept, label="recording"):
     return events, len(chunks)
 
 
-def run_detection(edf_path, channel, model, batch_size=256, device="cpu", progress=None):
-    """Full detection on one EDF channel: preprocessing, inference, post-processing."""
-    raw = open_edf(edf_path, channel)
-    fs = float(raw.info["sfreq"])
-    if fs != pp.fs:
-        raise ValueError(f"Sampling rate is {fs:g} Hz. IctalX currently accepts {pp.fs} Hz recordings only.")
-    meas_date = raw.info["meas_date"]
-    if meas_date is None:
-        raise ValueError(f"{edf_path} has no recording start time in its header.")
-    t_start, y_prob, kept = predict(model, raw, fs, batch_size, device, progress)
-    events, n_chunks = detect_events(t_start, y_prob, kept, Path(edf_path).stem)
-    return DetectionResult(events, t_start, y_prob, kept, n_chunks, fs,
-                           int(raw.n_times), meas_date.replace(tzinfo=None))
+def run_detection(source, model, batch_size=256, device="cpu", progress=None, label="recording"):
+    """Full detection on one channel: preprocessing, inference, post-processing."""
+    if source.fs != pp.fs:
+        raise ValueError(f"Sampling rate is {source.fs:g} Hz. IctalX currently accepts {pp.fs} Hz recordings only.")
+    t_start, y_prob, kept = predict(model, source, batch_size, device, progress)
+    events, n_chunks = detect_events(t_start, y_prob, kept, label)
+    return DetectionResult(events, t_start, y_prob, kept, n_chunks, source.fs,
+                           source.n_samples, source.start)

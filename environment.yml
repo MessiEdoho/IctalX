@@ -13,4 +13,10 @@ dependencies:
       - scipy==1.15.3
       - mne==1.11.0
       - pandas==2.3.3
+      - fastapi==0.162.0
+      - uvicorn[standard]==0.54.0
+      - python-multipart==0.0.32
+      - matplotlib==3.10.9
       - pytest
+      - httpx==0.28.1     # used by the API tests
+      - pyflakes          # code check, development only

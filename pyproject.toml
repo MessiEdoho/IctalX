@@ -6,6 +6,6 @@ requires-python = ">=3.10,<3.11"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = [".", "tests"]
 markers = ["slow: long end-to-end runs (m427 takes about 90 minutes on CPU)"]
 addopts = "-m 'not slow'"

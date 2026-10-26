@@ -27,7 +27,7 @@ MODEL_DIR = Path(os.environ.get("ICTALX_MODEL_DIR", r"C:\Users\messi\ictalx_mode
                     reason="m427, reference events or model files not available")
 def test_m427_matches_reference_events():
     model = pipeline.load_model(MODEL_DIR)
-    result = pipeline.run_detection(EDF, "EEG", model)
+    result = pipeline.run_detection(pipeline.EdfSource(EDF, "EEG"), model, label="m427")
 
     assert len(result.t_start_sec) == 392311
     assert int((~result.kept).sum()) == 61
