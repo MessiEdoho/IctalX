@@ -1,0 +1,16 @@
+# Create with:  conda env create -f environment.yml
+# Remove with:  conda env remove -n ictalx
+name: ictalx
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cpu
+      - torch==2.5.1
+      - numpy==2.2.5
+      - scipy==1.15.3
+      - mne==1.11.0
+      - pandas==2.3.3
+      - pytest
