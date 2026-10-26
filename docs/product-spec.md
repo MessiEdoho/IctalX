@@ -155,7 +155,7 @@ Reference recording `m427.edf`: one channel labelled `EEG`, unit V, physical ran
 | Field | EDF | CSV | Rule |
 | --- | --- | --- | --- |
 | Channel | Dropdown, filled from the file header | Signal column name | Must exist in the file. |
-| Sampling rate | From header, shown read-only | Number entry, default 500 Hz | Used as it is. No resampling. For CSV with a time column, the rate must agree with the time values. |
+| Sampling rate | From header, shown read-only | Number entry, default 500 Hz | Must be exactly 500 Hz during the pilot, or the file is rejected (V05). No resampling. For CSV with a time column, the rate must agree with the time values. |
 | Unit | From header | µV or mV | Robust z-scoring removes scale, so the unit does not change detection. |
 | Time column | Not used | Optional | If given, must be monotonic and agree with the sampling rate. |
 | Start time | From header, required | Optional | EDF files without a start date and time are rejected (V09). For CSV without a start time, clock times are left blank. |
@@ -172,7 +172,7 @@ A file is rejected, with a clear message, if any check fails. A rejected file is
 | V02 | File parses without error | "The file appears to be damaged and could not be read." |
 | V03 | File contains samples | "The file contains no signal data." |
 | V04 | The chosen channel or column exists | "The selected channel was not found in this file." |
-| V05 | Sampling rate matches the model rate | "Sampling rate is X Hz. IctalX requires Y Hz." |
+| V05 | Sampling rate is exactly 500 Hz (the training rate). Pilot rule; other rates may be supported later | "Sampling rate is X Hz. IctalX currently accepts 500 Hz recordings only." |
 | V06 | Removed. Segments with NaN, infinite or extreme values are dropped silently (section 7.1, step 5); the file is not rejected. | |
 | V07 | File size is 2 GB or less | "Files larger than 2 GB are not supported." |
 | V08 | Recording is at least one segment long (5 s) | "The recording is shorter than 5 s." |
@@ -490,20 +490,24 @@ Reference recordings and their expected outputs come from the training codebase.
 
 ## 15. Open questions
 
-| No. | Question | Why it matters |
+Answered questions are kept for the record; the answer is in the section named.
+
+| No. | Question | Status |
 | --- | --- | --- |
-| Q1 | What is the required sampling rate, and should other rates be rejected or resampled? | Defines V05. |
-| Q2 | Is normalisation per recording or per segment? | Changes model input. |
-| Q3 | Threshold, minimum duration and refractory gap values? | Needed for 7.3. |
-| Q4 | Is event probability the mean or the maximum of its segments? | Needed for 7.4. |
-| Q5 | Should the waveform show the raw signal or the preprocessed signal? | Changes what the reviewer sees. |
-| Q6 | How are kurtosis, skewness, envelope and peak amplitude computed? | Needed for 7.5. |
-| Q7 | What counts as a physically impossible value? | Needed for V06. |
-| Q8 | How long should a session last with no activity? | Results are lost when it expires. |
-| Q9 | Should times be shown as seconds from start, clock time, or both? | Long recordings are easier to read in clock time. |
-| Q10 | What licence will the code and model use? | Needed for the cite block and the offline version. |
-| Q11 | Which sample recordings can be shared publicly? | Data permissions. |
-| Q12 | Will the UCD deployment be open, limited to the UCD network, or need sign-in? | Affects stage 2 setup. |
+| Q1 | Required sampling rate; reject or resample other rates? | Answered: 500 Hz only during the pilot; other rates rejected (V05) |
+| Q2 | Normalisation per recording or per segment? | Answered: per 40-segment block (7.1) |
+| Q3 | Threshold, minimum duration and refractory gap? | Answered: 0.5, 25 s, 30 s; maximum 120 s (7.3) |
+| Q4 | Event probability: mean or maximum? | Answered: mean (7.4) |
+| Q5 | Waveform: raw or preprocessed signal? | Answered: preprocessed (7.6) |
+| Q6 | Descriptor definitions? | Answered (7.5) |
+| Q7 | What counts as an impossible value? | Answered: NaN, inf, or abs(x) > 1000 after preprocessing; the segment is removed (7.1) |
+| Q8 | Session length? | Answered: 3 hours with no activity (8.3) |
+| Q9 | Elapsed time, clock time, or both? | Answered: both (10.4) |
+| Q10 | Licence for code and model? | Open |
+| Q11 | Sample recordings for the focus group? | Open: owner to supply files |
+| Q12 | UCD access: open, UCD network only, or sign-in? | Open |
+| Q13 | AWS focus group: access method, budget, dates | Open |
+| Q14 | Supporting sampling rates other than 500 Hz | Deferred until after the pilot |
 
 ## 16. Decision log
 
@@ -526,7 +530,7 @@ Reference recordings and their expected outputs come from the training codebase.
 | 2026-10-25 | The waveform shows the preprocessed signal. Superseded the same day. |
 | 2026-10-25 | Times are shown as both elapsed time and clock time. |
 | 2026-10-25 | Model is M3, MultiScaleTCN without attention. |
-| 2026-10-25 | Sampling rate is taken from the file and used as it is. |
+| 2026-10-25 | Sampling rate is taken from the file and used as it is. Superseded on 2026-10-26. |
 | 2026-10-25 | Waveform shows the original signal; the selected event is highlighted. Superseded the same day. |
 | 2026-10-25 | Spectrogram uses the waveform window, with a red rectangle around the seizure. Settings from `missed_seizure_audit.py`. |
 | 2026-10-25 | Spectrogram frequency axis runs to the Nyquist frequency (fs / 2), not 70 Hz. |
@@ -544,6 +548,7 @@ Reference recordings and their expected outputs come from the training codebase.
 | 2026-10-26 | Weights stay out of git and are checked by SHA-256 at start-up. |
 | 2026-10-26 | Removed segments inside a display window are shown as a labelled gap. |
 | 2026-10-26 | Session length 3 hours with no activity. |
+| 2026-10-26 | Pilot accepts 500 Hz recordings only; other rates are rejected. Support for other rates to be considered later. |
 | 2026-10-25 | Reference for testing: m427 rows of `test_event_details.csv` (MIN_EVENT_SEC_25s, min_then_refractory). |
 | 2026-10-24 | No database at this stage. Results live in server memory for the session. |
 | 2026-10-24 | Waveform and spectrogram come from the real signal, 120 s before onset to 120 s after offset, with the seizure highlighted. |

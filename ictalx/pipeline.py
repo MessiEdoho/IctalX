@@ -174,6 +174,8 @@ def run_detection(edf_path, channel, model, batch_size=256, device="cpu", progre
     """Full detection on one EDF channel: preprocessing, inference, post-processing."""
     raw = open_edf(edf_path, channel)
     fs = float(raw.info["sfreq"])
+    if fs != pp.fs:
+        raise ValueError(f"Sampling rate is {fs:g} Hz. IctalX currently accepts {pp.fs} Hz recordings only.")
     meas_date = raw.info["meas_date"]
     if meas_date is None:
         raise ValueError(f"{edf_path} has no recording start time in its header.")
