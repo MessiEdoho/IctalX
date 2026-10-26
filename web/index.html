@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>IctalX — seizure detection for single-channel mouse EEG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23131230'/%3E%3Cpath d='M4 17h6l3-9 4 16 3-11 2 4h6' fill='none' stroke='%23F0A81E' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">
+      <span class="wordmark">Ictal<span class="x">X</span></span>
+      <span class="tagline">seizure detection · mouse EEG</span>
+    </div>
+    <nav class="nav" aria-label="Primary">
+      <a href="#s01"><span class="num">01</span>Upload &amp; review</a>
+      <a href="#s02"><span class="num">02</span>Pipeline</a>
+      <a href="#s03"><span class="num">03</span>Test data</a>
+      <a href="#cite" class="cta">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Research aid · single-channel mouse EEG</p>
+    <h1>Find ictal events in mouse EEG, one channel at a time.</h1>
+    <p class="lede">IctalX runs a trained deep learning model on a single EEG channel and surfaces candidate seizure events for you to review, confirm, and export. It assists analysis; it does not diagnose.</p>
+    <div class="scope">
+      <canvas id="scopeCanvas" aria-hidden="true"></canvas>
+      <div class="scope-cap">
+        <span class="c">illustration · single channel · 500 Hz</span>
+        <span class="badge-live">ictal burst</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 01 UPLOAD & REVIEW ================= -->
+<section class="band" id="s01">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2>Upload &amp; review</h2>
+      <p class="lede">Point IctalX at a recording, run detection, then step through every candidate event and mark it confirmed or rejected.</p>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Your recording</div>
+        <div class="card-sub">Single channel of mouse EEG, 500 Hz. Your file is processed and then deleted.</div>
+
+        <div class="seg" role="group" aria-label="File format">
+          <button type="button" data-fmt="EDF" aria-pressed="true">EDF</button>
+          <button type="button" data-fmt="CSV" aria-pressed="false">CSV</button>
+        </div>
+
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose a recording">
+          <div>Drop your <span class="fmt" id="dzFmt">EDF</span> file here</div>
+          <div style="font-size:13px; margin-top:4px;">or <strong>click to browse</strong></div>
+        </div>
+        <input type="file" id="fileInput" accept=".edf" hidden>
+
+        <div class="filechip" id="filechip" hidden>
+          <span class="nm" id="fileName"></span>
+          <span class="sz" id="fileSize"></span>
+          <button type="button" class="rm" id="fileRemove" aria-label="Remove file">×</button>
+        </div>
+
+        <!-- EDF fields: filled from the header, read in the browser -->
+        <div class="fields" id="edfFields" hidden>
+          <div class="full">
+            <label class="field-label" for="edfChan">Channel</label>
+            <select class="inp" id="edfChan"></select>
+            <div class="hint" id="edfChanHint"></div>
+          </div>
+          <div><span class="field-label">Sampling rate</span><div class="ro" id="edfRate">—</div></div>
+          <div><span class="field-label">Unit</span><div class="ro" id="edfUnit">—</div></div>
+          <div class="full"><span class="field-label">Start time</span><div class="ro" id="edfStart">—</div></div>
+        </div>
+
+        <!-- CSV fields -->
+        <div class="fields" id="csvFields" hidden>
+          <div>
+            <label class="field-label" for="sigCol">Signal column</label>
+            <select class="inp" id="sigCol"></select>
+          </div>
+          <div>
+            <label class="field-label" for="sfreq">Sampling rate (Hz)</label>
+            <input class="inp" id="sfreq" type="number" value="500" min="1" step="any">
+          </div>
+          <div>
+            <label class="field-label" for="unit">Unit</label>
+            <select class="inp" id="unit"><option value="µV">µV</option><option value="mV">mV</option></select>
+          </div>
+          <div>
+            <label class="field-label" for="timeCol">Time column (optional)</label>
+            <select class="inp" id="timeCol"></select>
+          </div>
+          <div class="full">
+            <label class="field-label" for="startT">Start time (optional)</label>
+            <input class="inp" id="startT" placeholder="YYYY-MM-DD hh:mm:ss">
+          </div>
+        </div>
+
+        <div class="alert" id="errorBox" role="alert" hidden>
+          <div class="t">File not accepted</div>
+          <div class="m" id="errorMsg"></div>
+          <div class="s"><code id="errorCode"></code> · The file was not analysed and has not been kept.</div>
+        </div>
+
+        <div class="progress" id="progress" hidden aria-live="polite">
+          <div class="aid">Analysis <b id="progId">—</b></div>
+          <ul class="steps" id="steps">
+            <li data-step="upload"><span class="box">✓</span>Uploading<span class="val" id="upPct"></span></li>
+            <li data-step="validate"><span class="box">✓</span>Validating</li>
+            <li data-step="queue"><span class="box">✓</span>Waiting in queue<span class="val" id="queuePos"></span></li>
+            <li data-step="detect"><span class="box">✓</span>Preprocessing and inference<span class="val" id="segCount"></span></li>
+            <li data-step="windows"><span class="box">✓</span>Preparing event windows</li>
+            <li class="bar" id="detectBar" hidden><i></i></li>
+          </ul>
+          <button type="button" class="btn-ghost" id="cancelBtn">Cancel</button>
+        </div>
+
+        <button type="button" class="btn-primary" id="detectBtn" disabled>Detect seizures</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recording summary</div>
+        <div class="card-sub">Populated after a detection run.</div>
+        <div class="statgrid">
+          <div class="stat"><div class="k">Recording</div><div class="v" id="stRec">—</div></div>
+          <div class="stat"><div class="k">Events</div><div class="v" id="stEvents">—</div></div>
+          <div class="stat"><div class="k">Total ictal</div><div class="v" id="stIctal">—</div></div>
+          <div class="stat"><div class="k">Avg confidence</div><div class="v" id="stConf">—</div></div>
+          <div class="stat"><div class="k">Reviewed</div><div class="v" id="stReviewed">—</div></div>
+          <div class="stat"><div class="k">Confirmed</div><div class="v" id="stConfirmed">—</div></div>
+          <div class="stat"><div class="k">Rejected</div><div class="v" id="stRejected">—</div></div>
+          <div class="stat"><div class="k">Analysis ID</div><div class="v mono" id="stId">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notice" id="sessionNotice" hidden>
+      <span class="ic">i</span>
+      <span>Results are not saved on the server. Download them before you close this page; they are removed after 3 hours without activity.</span>
+      <button type="button" id="noticeClose">Dismiss</button>
+    </div>
+
+    <!-- ===== Event review (master-detail) ===== -->
+    <div class="review-block" id="review" hidden>
+      <div class="rb-top">
+        <h3>Event review</h3>
+        <div class="dl">
+          <a class="btn-line" id="dlCsv" href="#">Download events.csv</a>
+          <a class="btn-line" id="dlZip" href="#">Download report (.zip)</a>
+        </div>
+      </div>
+
+      <div class="m-bar">
+        <span class="m-lead">Detected events · select to review</span>
+        <div class="ctl">
+          <select id="filterSel" aria-label="Filter by status">
+            <option value="all">Status: all</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select id="sortSel" aria-label="Sort events">
+            <option value="onset">Sort: onset</option>
+            <option value="prob">Sort: probability</option>
+          </select>
+        </div>
+      </div>
+      <div class="m-scroll">
+        <table class="events" aria-label="Detected seizure events">
+          <thead>
+            <tr><th>#</th><th>Onset</th><th class="c-off">Offset</th><th>Dur</th><th>Mean p</th><th>Status</th></tr>
+          </thead>
+          <tbody id="evBody"></tbody>
+        </table>
+        <div class="empty" id="noEvents" hidden>No seizure events were detected in this recording.</div>
+      </div>
+
+      <div class="detail" id="detail" hidden>
+        <div class="detail-head">
+          <h4>Event <span class="eid" id="dEvId">—</span></h4>
+          <span class="pill pending" id="dPill">Pending review</span>
+        </div>
+        <div class="feat-grid">
+          <div class="feat"><div class="fl">Onset</div><div class="fv" id="dOnset">—</div></div>
+          <div class="feat"><div class="fl">Offset</div><div class="fv" id="dOffset">—</div></div>
+          <div class="feat"><div class="fl">Duration</div><div class="fv" id="dDur">—</div></div>
+          <div class="feat"><div class="fl">Mean probability</div><div class="fv" id="dProb">—</div></div>
+          <div class="feat"><div class="fl">Peak amplitude</div><div class="fv" id="dPeak">—</div></div>
+          <div class="feat"><div class="fl">Kurtosis</div><div class="fv" id="dKurt">—</div></div>
+          <div class="feat"><div class="fl">Skewness</div><div class="fv" id="dSkew">—</div></div>
+          <div class="feat"><div class="fl">Envelope</div><div class="fv" id="dEnv">—</div></div>
+        </div>
+
+        <div class="viz-cap"><span>Preprocessed signal · 120 s before onset to 120 s after offset</span><span class="u">z-score · 500 Hz</span></div>
+        <canvas id="wave" class="viz" aria-label="Event waveform"></canvas>
+        <div class="viz-cap"><span>Spectrogram · same window</span><span class="u">0–250 Hz · dB</span></div>
+        <canvas id="spectro" class="viz" aria-label="Event spectrogram"></canvas>
+        <div class="loading" id="vizLoading" hidden>Loading signal…</div>
+
+        <div class="review">
+          <h5>Review this event</h5>
+          <div class="status-row">Current status: <span class="pill pending" id="rvStatus">Pending review</span></div>
+          <div>
+            <span class="field-label">Decision</span>
+            <div class="choices" role="group" aria-label="Review decision">
+              <button type="button" class="choice confirm" id="tConf" aria-pressed="false">✓ Confirm <kbd>C</kbd></button>
+              <button type="button" class="choice reject" id="tRej" aria-pressed="false">✕ Reject <kbd>R</kbd></button>
+            </div>
+          </div>
+          <div class="save-row">
+            <button type="button" class="btn-save" id="saveReview" disabled>Save review <kbd>S</kbd></button>
+            <span class="unsaved" id="unsavedFlag" hidden>Unsaved decision</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 02 PIPELINE ================= -->
+<section class="band alt" id="s02">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2>Processing pipeline</h2>
+      <p class="lede">Every recording moves through the same four stages before results reach your screen.</p>
+    </div>
+    <div class="pipeline">
+      <div class="pstep"><div class="n">STEP 1</div><h4>Preprocessing</h4><p>The selected channel is processed in blocks of 40 segments. Each block is notch-filtered at 50 Hz (zero-phase, Q = 30), its DC offset removed, then robustly normalised with the median and MAD. It is cut into 5 s segments (2,500 samples at 500 Hz) every 2.5 s. Segments with non-finite or extreme values are set aside.</p><span class="arrow">→</span></div>
+      <div class="pstep"><div class="n">STEP 2</div><h4>Inference</h4><p>A MultiScale Temporal Convolutional Network scores every 5 s segment. Three parallel dilated-convolution branches capture fine, medium, and coarse temporal scales; the fused output passes through a sigmoid to give a per-segment seizure probability in [0, 1].</p><span class="arrow">→</span></div>
+      <div class="pstep"><div class="n">STEP 3</div><h4>Post-processing</h4><p>Segment probabilities are smoothed over 3 segments and thresholded at 0.5, and consecutive positive segments are grouped into events. Events shorter than 25 s are dropped, events less than 30 s apart are merged, and events longer than 120 s are dropped.</p><span class="arrow">→</span></div>
+      <div class="pstep"><div class="n">STEP 4</div><h4>Output</h4><p>An event table with per-event descriptors, waveforms, spectrograms and confidence for human review.</p></div>
+    </div>
+    <p class="pnote">Full parameters and network architecture are documented in the paper.</p>
+  </div>
+</section>
+
+<!-- ================= 03 TEST DATA ================= -->
+<section class="band" id="s03">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2>Test data &amp; offline use</h2>
+      <p class="lede">Try the tool on sample recordings, or run the whole thing on your own machine.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Sample EEG files</div>
+      <div class="card-sub">Single-channel recordings to exercise the interface.</div>
+      <div class="samplefiles" id="sampleList"><div class="hint">Loading…</div></div>
+      <div class="offline">
+        <div class="card-title">Run IctalX on your own machine</div>
+        <ol>
+          <li>Get the IctalX code and the model weights from the authors.</li>
+          <li>Create the environment: <code>conda env create -f environment.yml</code></li>
+          <li>Start it: <code>uvicorn ictalx.server:app --port 8000</code>, with <code>ICTALX_MODEL_DIR</code> pointing to the weights.</li>
+          <li>Open <code>http://localhost:8000</code>. Your recordings stay on your computer.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CITE ================= -->
+<section class="band alt" id="cite">
+  <div class="wrap">
+    <div class="cite-block">
+      <p class="eyebrow">Cite the work</p>
+      <p class="cite-line">[Author(s)]. “IctalX: deep-learning seizure detection for single-channel mouse EEG.” [Journal / preprint], [year]. [DOI placeholder].</p>
+      <pre class="bibtex">@article{ictalx[year],
+  title   = {IctalX: deep-learning seizure detection for single-channel mouse EEG},
+  author  = {[Author One] and [Author Two]},
+  journal = {[Journal / preprint]},
+  year    = {[year]},
+  doi     = {[DOI placeholder]}
+}</pre>
+      <p class="contact-line">Contact: [name] · [email placeholder] &nbsp;·&nbsp; Licence: [licence placeholder]</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-in">
+    <span class="wordmark" style="font-size:18px;">Ictal<span class="x">X</span></span>
+    <p class="disclaimer"><strong>Research aid, not a clinical device.</strong> IctalX is intended for analysis of mouse EEG in a research setting. It does not diagnose disease and must not be used for clinical or human decision-making.</p>
+  </div>
+</footer>
+
+<!-- Unsaved decision prompt -->
+<div class="modal-bg" id="unsavedModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="umTitle" aria-describedby="umText">
+    <h4 id="umTitle">Unsaved decision</h4>
+    <p id="umText"></p>
+    <div class="acts">
+      <button type="button" id="umStay">Stay</button>
+      <button type="button" id="umDiscard">Discard</button>
+      <button type="button" class="primary" id="umSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

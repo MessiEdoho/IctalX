@@ -85,3 +85,9 @@ def test_v09_no_start_time(tmp_path):
     p = tmp_path / "nodate.edf"
     write_edf(p, {"EEG": noise(60)}, 500, start="", start_time="")
     assert code_of(lambda: validation.validate_edf(p, "EEG")) == "V09"
+
+
+def test_v09_placeholder_date(tmp_path):
+    p = tmp_path / "anon.edf"
+    write_edf(p, {"EEG": noise(60)}, 500, start="01.01.85", start_time="10.00.00")
+    assert code_of(lambda: validation.validate_edf(p, "EEG")) == "V09"

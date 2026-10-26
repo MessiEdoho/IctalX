@@ -20,6 +20,7 @@ The full specification is in [docs/product-spec.md](docs/product-spec.md); the w
 | `ictalx/jobs.py` | In-memory analyses and the background detection queue |
 | `ictalx/exports.py` | `events.csv` and the report zip |
 | `ictalx/server.py` | Web API |
+| `web/` | Interface: `index.html`, `style.css`, `app.js` |
 | `tests/` | Tests; `test_m427_parity.py` is the full reference check |
 
 ## Setup
@@ -46,6 +47,7 @@ Then open http://localhost:8000. Other settings are listed in section 12.1 of th
 ```
 conda run -n ictalx pytest            # fast tests, about 1 minute
 conda run -n ictalx pytest -m slow    # full m427 parity test, about 1 hour on a laptop CPU
+conda run -n ictalx pytest -m browser # interface test in Microsoft Edge, about 2 minutes
 ```
 
 Tests that need `m427.edf`, the reference results or the weights are skipped when those files

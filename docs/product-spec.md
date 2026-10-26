@@ -176,7 +176,7 @@ A file is rejected, with a clear message, if any check fails. A rejected file is
 | V06 | Removed. Segments with NaN, infinite or extreme values are dropped silently (section 7.1, step 5); the file is not rejected. | |
 | V07 | File size is 2 GB or less | "Files larger than 2 GB are not supported." |
 | V08 | Recording is at least one segment long (5 s) | "The recording is shorter than 5 s." |
-| V09 | EDF header has a recording start date and time. A blank or all-zero date counts as missing | "This EDF file has no recording start time." |
+| V09 | EDF header has a recording start date and time. A blank or all-zero date, or the EDF placeholder date 01.01.85 (any time), counts as missing | "This EDF file has no recording start time." |
 | V10 | CSV time column, if named, contains numbers that increase and match the sampling rate (median step within 1%) | "The time column must increase steadily and match the sampling rate." |
 | V11 | CSV start time, if given, is a date and time | "Start time not understood. Use YYYY-MM-DD hh:mm:ss." |
 | V12 | CSV unit is µV or mV | "Unit must be µV or mV." |
@@ -431,6 +431,22 @@ Master list, then detail, stacked vertically as in the prototype.
 
 Recording length, number of events, total ictal time, average confidence, reviewed count, confirmed count, rejected count, analysis ID.
 
+### 10.6 Interface behaviour as built
+
+Implemented in `web/index.html`, `web/style.css` and `web/app.js`.
+
+| Item | Behaviour |
+| --- | --- |
+| Checks in the browser | Before upload the page reads the EDF header and refuses wrong extension (V01), files over 2 GB (V07), a channel not at 500 Hz (V05) and a missing or 01.01.85 start date (V09). The server repeats every check |
+| Header values | Channel list shows each channel's rate. Sampling rate, unit and start time are shown read-only |
+| Upload and progress | Upload percentage, then the server stages of 10.3 polled every second, with queue position and segments processed |
+| Waveform scale | 110% of the largest swing inside the seizure, so artefacts elsewhere in the window do not shrink it; larger values are clipped at the edges. The scale is printed in the corner (for example ±57.9 z) |
+| Spectrogram colours | Viridis, from the 5th to the 99.5th percentile of the window's dB values |
+| Status badge | Always shows the saved decision. A draft shows only on the pressed button and the "Unsaved decision" marker |
+| Starting a new analysis | Asks for confirmation if results are on screen |
+| Leaving the page | Browser warning if a draft is unsaved, a job is running, or results have not been downloaded since the last change |
+| Fonts | Loaded from Google Fonts for now; self-hosting is still to do (section 11) |
+
 ## 11. Data handling and security
 
 | Topic | Stage 1, local | Stage 2, UCD |
@@ -575,6 +591,7 @@ Answered questions are kept for the record; the answer is in the section named.
 | 2026-10-26 | Session length 3 hours with no activity. |
 | 2026-10-26 | Pilot accepts 500 Hz recordings only; other rates are rejected. Support for other rates to be considered later. |
 | 2026-10-26 | Detection runs as a background job with polling; API in section 12 as built. New validation codes V10 to V12 for CSV. |
+| 2026-10-26 | EDF files dated 01.01.85 (the EDF placeholder for an unknown date) are rejected as having no start time. |
 | 2026-10-25 | Reference for testing: m427 rows of `test_event_details.csv` (MIN_EVENT_SEC_25s, min_then_refractory). |
 | 2026-10-24 | No database at this stage. Results live in server memory for the session. |
 | 2026-10-24 | Waveform and spectrogram come from the real signal, 120 s before onset to 120 s after offset, with the seizure highlighted. |

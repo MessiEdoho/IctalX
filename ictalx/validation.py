@@ -3,7 +3,7 @@
 Each check raises ValidationError with the spec's code and a plain message.
 A file that passes is returned as a signal source ready for detection.
 """
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import mne
@@ -15,6 +15,7 @@ from ictalx.training import preprocessing_binary as pp
 
 MAX_BYTES = 2 * 1024 ** 3                     # V07: 2 GB
 UNIT_TO_UV = {"µV": 1.0, "uV": 1.0, "mV": 1e3}
+PLACEHOLDER_DATE = date(1985, 1, 1)           # EDF convention for an unknown start date
 
 
 class ValidationError(Exception):
@@ -59,7 +60,9 @@ def validate_edf(path, channel):
         source = pipeline.EdfSource(path, channel)
     except Exception:
         raise ValidationError("V02", "The file appears to be damaged and could not be read.")
-    if source.start is None:
+    # A blank date reads as None. 01.01.85 is the EDF placeholder for an unknown or
+    # anonymised date; it is treated as missing, whatever the time field says.
+    if source.start is None or source.start.date() == PLACEHOLDER_DATE:
         raise ValidationError("V09", "This EDF file has no recording start time.")
     _check_length_and_rate(source.n_samples, source.fs)
     return source

@@ -8,7 +8,9 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from ictalx import events as ev_mod
@@ -48,6 +50,8 @@ async def lifespan(app):
 
 
 app = FastAPI(title="IctalX", lifespan=lifespan)
+app.add_middleware(GZipMiddleware, minimum_size=2048)             # spectrograms are large JSON
+app.mount("/static", StaticFiles(directory=load_settings().web_dir, check_dir=False), name="static")
 
 
 def _analysis(aid):
