@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IctalX Wireframes</title>
+<style>
+:root{
+  --bg:#EEF0F3;
+  --paper:#FFFFFF;
+  --ink:#1F2328;
+  --ink-2:#4B5563;
+  --ink-3:#8A929E;
+  --line:#B9BFC8;
+  --line-2:#D9DDE3;
+  --fill:#F3F4F6;
+  --fill-2:#E5E7EB;
+  --dark:#3B4048;
+  --pin:#2563EB;
+  --pin-soft:#DBE6FD;
+  --seiz:#F5C46B;
+  --seiz-soft:#FCEBC8;
+  --err:#9B3B2A;
+  --err-soft:#F6E3DF;
+  --sans:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Mono","Consolas",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:14px; line-height:1.5;}
+.doc{max-width:1360px; margin:0 auto; padding:40px 32px 80px;}
+
+/* ---------- Document header ---------- */
+.doc-head{display:grid; grid-template-columns:1fr auto; gap:24px; align-items:end; padding-bottom:24px; border-bottom:1px solid var(--line);}
+.doc-head h1{margin:0; font-size:28px; font-weight:600; letter-spacing:-.01em;}
+.doc-head p{margin:6px 0 0; color:var(--ink-2); max-width:70ch;}
+.meta{display:grid; grid-template-columns:auto auto; gap:2px 16px; font-family:var(--mono); font-size:12px; color:var(--ink-2);}
+.meta b{color:var(--ink); font-weight:600;}
+
+.intro{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:24px 0 40px;}
+.panel{background:var(--paper); border:1px solid var(--line-2); border-radius:8px; padding:18px 20px;}
+.panel h2{margin:0 0 12px; font-size:13px; font-family:var(--mono); font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2);}
+.index{margin:0; padding:0; list-style:none; columns:2; column-gap:24px;}
+.index li{padding:3px 0; break-inside:avoid;}
+.index a{color:var(--ink); text-decoration:none;}
+.index a:hover{color:var(--pin);}
+.index .id{font-family:var(--mono); color:var(--ink-3); display:inline-block; width:40px;}
+.legend{display:grid; grid-template-columns:auto 1fr; gap:10px 14px; align-items:center;}
+.sw{width:40px; height:18px; border-radius:3px;}
+.sw.box{border:1.5px solid var(--line); background:var(--paper);}
+.sw.ph{background:repeating-linear-gradient(90deg,var(--fill-2) 0 26px,transparent 26px 32px); height:8px; border-radius:4px;}
+.sw.seiz{background:var(--seiz-soft); border-left:2px solid var(--seiz); border-right:2px solid var(--seiz);}
+.sw.pad{background:repeating-linear-gradient(135deg,var(--fill-2) 0 4px,var(--fill) 4px 8px); border:1px solid var(--line-2);}
+.sw.pinsw{display:flex; align-items:center;}
+.sw.pinsw span{width:20px; height:20px; border-radius:50%; background:var(--pin); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+
+/* ---------- Boards ---------- */
+.board{margin-top:48px; break-before:page;}
+.board-head{display:flex; align-items:baseline; gap:14px; margin-bottom:14px;}
+.board-head .bid{font-family:var(--mono); font-size:13px; font-weight:600; color:var(--pin); background:var(--pin-soft); padding:2px 8px; border-radius:4px;}
+.board-head h2{margin:0; font-size:20px; font-weight:600;}
+.board-head .ctx{margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--ink-3);}
+.board-body{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:24px; align-items:start;}
+
+.notes{background:var(--paper); border:1px solid var(--line-2); border-radius:8px; padding:18px 20px; position:sticky; top:16px;}
+.notes h3{margin:0 0 10px; font-size:12px; font-family:var(--mono); font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2);}
+.notes ol{margin:0; padding:0; list-style:none; counter-reset:n;}
+.notes li{counter-increment:n; position:relative; padding:0 0 12px 32px;}
+.notes li:last-child{padding-bottom:0;}
+.notes li::before{content:counter(n); position:absolute; left:0; top:1px; width:20px; height:20px; border-radius:50%; background:var(--pin); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+.notes li b{font-weight:600;}
+.notes .sub{margin-top:16px; padding-top:14px; border-top:1px solid var(--line-2);}
+.notes table{width:100%; border-collapse:collapse; font-size:12px;}
+.notes td{padding:3px 0; vertical-align:top;}
+.notes td:first-child{font-family:var(--mono); color:var(--ink-2); width:42px;}
+
+/* ---------- Screen frame ---------- */
+.screen{background:var(--paper); border:1px solid var(--line); border-radius:10px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px -12px rgba(0,0,0,.12);}
+.chrome{display:flex; align-items:center; gap:10px; height:34px; padding:0 12px; background:var(--fill); border-bottom:1px solid var(--line-2);}
+.dots{display:flex; gap:6px;}
+.dots i{width:10px; height:10px; border-radius:50%; background:var(--line-2); display:block;}
+.url{flex:1; max-width:420px; height:20px; border-radius:5px; background:var(--paper); border:1px solid var(--line-2); font-family:var(--mono); font-size:11px; color:var(--ink-3); display:flex; align-items:center; padding:0 8px;}
+.canvas{padding:24px;}
+.canvas.flush{padding:0;}
+
+/* ---------- Pins ---------- */
+[data-pin]{position:relative;}
+[data-pin]::after{content:attr(data-pin); position:absolute; top:-9px; right:-9px; width:20px; height:20px; border-radius:50%; background:var(--pin); color:#fff; font-family:var(--sans); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--paper); z-index:5;}
+[data-pin-l]::after{right:auto; left:-9px;}
+.pin-in::after{top:10px; right:10px;}
+.pin-out::after{top:50%; right:-30px; transform:translateY(-50%);}
+
+/* ---------- Wireframe primitives ---------- */
+.wf{border:1.5px solid var(--line); border-radius:8px; background:var(--paper);}
+.wf.pad{padding:18px;}
+.wf.fill{background:var(--fill);}
+.wf.dash{border-style:dashed;}
+.row{display:flex; gap:12px; align-items:center;}
+.col{display:flex; flex-direction:column; gap:12px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+.sp{flex:1;}
+.t-cap{font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);}
+.t-h{font-size:16px; font-weight:600;}
+.t-h2{font-size:22px; font-weight:600; letter-spacing:-.01em;}
+.t-h1{font-size:30px; font-weight:600; letter-spacing:-.02em; line-height:1.15;}
+.t-s{font-size:12px; color:var(--ink-2);}
+.t-m{font-family:var(--mono); font-size:12px;}
+.ph{height:8px; border-radius:4px; background:var(--fill-2);}
+.ph.w90{width:90%}.ph.w75{width:75%}.ph.w60{width:60%}.ph.w45{width:45%}.ph.w30{width:30%}
+.ph.dk{background:var(--line);}
+.ph.tall{height:12px;}
+
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; height:36px; padding:0 16px; border-radius:7px; background:var(--dark); color:#fff; font-size:13px; font-weight:600; white-space:nowrap;}
+.btn.block{display:flex; width:100%;}
+.btn.ghost{background:var(--paper); color:var(--ink); border:1.5px solid var(--line);}
+.btn.off{background:var(--fill-2); color:var(--ink-3);}
+.btn.sm{height:30px; padding:0 12px; font-size:12px;}
+.btn.sel{background:var(--fill-2); color:var(--ink); border:1.5px solid var(--dark);}
+
+.seg{display:inline-flex; border:1.5px solid var(--line); border-radius:7px; padding:3px; gap:3px; background:var(--fill);}
+.seg span{padding:4px 14px; border-radius:5px; font-family:var(--mono); font-size:12px; color:var(--ink-3);}
+.seg span.on{background:var(--paper); color:var(--ink); box-shadow:0 0 0 1px var(--line);}
+
+.field{display:flex; flex-direction:column; gap:5px;}
+.inp{height:34px; border:1.5px solid var(--line); border-radius:6px; padding:0 10px; display:flex; align-items:center; font-size:13px; color:var(--ink); background:var(--paper);}
+.inp.ro{background:var(--fill); color:var(--ink-2); border-style:dashed;}
+.inp.dd::after{content:"\25BE"; margin-left:auto; color:var(--ink-3);}
+.inp.empty{color:var(--ink-3);}
+
+.drop{border:1.5px dashed var(--line); border-radius:8px; background:var(--fill); padding:22px; text-align:center; color:var(--ink-2); font-size:13px;}
+.drop b{color:var(--ink);}
+.chip{display:flex; align-items:center; gap:10px; border:1.5px solid var(--line); border-radius:7px; padding:8px 12px; background:var(--fill);}
+.chip .x{margin-left:auto; color:var(--ink-3); font-size:16px; line-height:1;}
+
+.stat{display:grid; grid-template-columns:1fr 1fr; border:1.5px solid var(--line); border-radius:8px; overflow:hidden;}
+.stat > div{padding:10px 12px; border-right:1px solid var(--line-2); border-bottom:1px solid var(--line-2);}
+.stat > div:nth-child(2n){border-right:0;}
+.stat > div:nth-last-child(-n+2){border-bottom:0;}
+.stat .v{font-size:18px; font-weight:600; margin-top:2px;}
+.stat .v small{font-size:12px; color:var(--ink-3); font-weight:400;}
+
+.tbl{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px;}
+.tbl th{text-align:left; font-weight:600; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); background:var(--fill); padding:8px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:9px 12px; border-bottom:1px solid var(--line-2);}
+.tbl tr:last-child td{border-bottom:0;}
+.tbl tr.sel td{background:var(--fill);}
+.tbl tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--dark); font-weight:600;}
+.tbl .num{text-align:right;}
+
+.pill{display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; padding:2px 8px; border-radius:999px; border:1.5px solid var(--line); color:var(--ink-2); background:var(--paper); white-space:nowrap;}
+.pill.solid{background:var(--dark); border-color:var(--dark); color:#fff;}
+.pill.out{border-style:dashed;}
+
+.feat{display:grid; grid-template-columns:repeat(8,1fr); gap:0; border:1.5px solid var(--line); border-radius:8px; background:var(--fill);}
+.feat > div{padding:10px 12px; border-right:1px solid var(--line-2);}
+.feat > div:last-child{border-right:0;}
+.feat .v{font-family:var(--mono); font-size:13px; margin-top:2px;}
+
+.viz{border:1.5px solid var(--line); border-radius:8px; background:var(--paper);}
+.viz svg{display:block; width:100%; height:auto; border-radius:7px; overflow:hidden;}
+.vizcap{display:flex; justify-content:space-between; margin:14px 0 6px;}
+
+.alert{border:1.5px solid var(--err); background:var(--err-soft); border-radius:8px; padding:14px 16px;}
+.alert .t{color:var(--err); font-weight:600;}
+.notice{display:flex; align-items:center; gap:12px; border:1.5px solid var(--line); background:var(--fill); border-radius:8px; padding:10px 14px; font-size:13px;}
+.notice .ic{width:20px; height:20px; border-radius:50%; border:1.5px solid var(--ink-2); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--ink-2); flex:none;}
+
+.steps{display:flex; flex-direction:column; gap:10px;}
+.step{display:flex; align-items:center; gap:10px; font-size:13px;}
+.box{width:16px; height:16px; border-radius:4px; border:1.5px solid var(--line); flex:none; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;}
+.box.done{background:var(--dark); border-color:var(--dark); color:#fff;}
+.box.now{border-color:var(--dark); box-shadow:inset 0 0 0 3px var(--paper); background:var(--dark);}
+.step.todo{color:var(--ink-3);}
+.bar{height:8px; border-radius:4px; background:var(--fill-2); overflow:hidden;}
+.bar i{display:block; height:100%; background:var(--dark);}
+
+.sitebar{display:flex; align-items:center; gap:20px; height:52px; padding:0 24px; border-bottom:1px solid var(--line-2);}
+.logo{font-weight:700; font-size:17px; letter-spacing:-.01em;}
+.navl{display:flex; gap:18px; margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--ink-2);}
+.hero{background:var(--fill-2); padding:28px 24px;}
+.sec{padding:24px; border-bottom:1px solid var(--line-2);}
+.sec:last-child{border-bottom:0;}
+.secnum{font-family:var(--mono); font-size:11px; color:var(--ink-3);}
+.trace{height:56px; border:1.5px solid var(--line); border-radius:6px; background:var(--paper); margin-top:16px; overflow:hidden;}
+.trace svg{display:block; width:100%; height:100%;}
+
+.modal-wrap{position:relative; height:420px; overflow:hidden;}
+.modal-bg{position:absolute; inset:0; padding:24px; filter:grayscale(1); opacity:.35;}
+.scrim{position:absolute; inset:0; background:rgba(31,35,40,.32);}
+.modal{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:420px; background:var(--paper); border-radius:10px; border:1.5px solid var(--line); box-shadow:0 20px 50px -10px rgba(0,0,0,.35); padding:22px;}
+
+.phone{width:375px; margin:0 auto; border:1.5px solid var(--line); border-radius:28px; padding:14px 10px; background:var(--fill);}
+.phone .scr{background:var(--paper); border-radius:18px; overflow:hidden; border:1px solid var(--line-2);}
+.phone .tbl th,.phone .tbl td{padding:7px 8px;}
+
+.footnote{margin-top:56px; padding-top:20px; border-top:1px solid var(--line); color:var(--ink-2); font-size:12px; display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap;}
+
+@media (max-width:1100px){
+  .board-body{grid-template-columns:1fr;}
+  .notes{position:static;}
+  .intro{grid-template-columns:1fr;}
+}
+@media print{
+  body{background:#fff;}
+  .doc{padding:0;}
+  .board{margin-top:0; padding-top:12px;}
+  .notes{position:static;}
+  .screen{box-shadow:none;}
+  @page{size:A3 landscape; margin:12mm;}
+}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<!-- ======================= DOCUMENT HEADER ======================= -->
+<header class="doc-head">
+  <div>
+    <h1>IctalX Wireframes</h1>
+    <p>Layout and behaviour of the IctalX interface for single-channel mouse EEG seizure detection. Structure only: colour, type and imagery follow the approved prototype. Read alongside the product specification.</p>
+  </div>
+  <div class="meta">
+    <span>Version</span><b>0.3</b>
+    <span>Date</span><b>25 Oct 2026</b>
+    <span>Owner</span><b>Mercy Edoho, UCD</b>
+    <span>Spec</span><b>docs/product-spec.md, draft 0.3</b>
+    <span>Status</span><b>For review</b>
+  </div>
+</header>
+
+<div class="intro">
+  <section class="panel">
+    <h2>Boards</h2>
+    <ul class="index">
+      <li><a href="#w1"><span class="id">W1</span>Page overview</a></li>
+      <li><a href="#w2"><span class="id">W2</span>Recording card, EDF</a></li>
+      <li><a href="#w3"><span class="id">W3</span>Recording card, CSV</a></li>
+      <li><a href="#w4"><span class="id">W4</span>Validation error</a></li>
+      <li><a href="#w5"><span class="id">W5</span>Detection in progress</a></li>
+      <li><a href="#w6"><span class="id">W6</span>Review workspace</a></li>
+      <li><a href="#w7"><span class="id">W7</span>Event near recording edge</a></li>
+      <li><a href="#w8"><span class="id">W8</span>Unsaved decision prompt</a></li>
+      <li><a href="#w9"><span class="id">W9</span>Mobile layout</a></li>
+    </ul>
+  </section>
+  <section class="panel">
+    <h2>Notation</h2>
+    <div class="legend">
+      <span class="sw box"></span><span>Container, card or control</span>
+      <span class="sw ph"></span><span>Placeholder text, content to be written</span>
+      <span class="sw seiz"></span><span>Detected seizure, highlighted in the signal</span>
+      <span class="sw pad"></span><span>Padding beyond the recording, no data</span>
+      <span class="sw pinsw"><span>1</span></span><span>Annotation, explained in the notes beside each board</span>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= W1 ======================= -->
+<section class="board" id="w1">
+  <div class="board-head"><span class="bid">W1</span><h2>Page overview</h2><span class="ctx">Desktop · 1280 px · single page</span></div>
+  <div class="board-body">
+    <div class="screen">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="url">localhost:8000</div></div>
+      <div class="canvas flush">
+        <div class="sitebar pin-in" data-pin="1" style="padding-right:44px;">
+          <span class="logo">IctalX</span><span class="t-s">seizure detection · mouse EEG</span>
+          <div class="navl"><span>01 Upload &amp; review</span><span>02 Pipeline</span><span>03 Test data</span></div>
+          <span class="btn sm">Contact</span>
+        </div>
+        <div class="hero pin-in" data-pin="2">
+          <div class="t-cap">Research aid · single-channel mouse EEG</div>
+          <div class="t-h1" style="margin-top:8px; max-width:16ch;">Find ictal events in mouse EEG, one channel at a time.</div>
+          <div class="col" style="gap:7px; margin-top:14px; max-width:520px;"><div class="ph dk"></div><div class="ph dk w90"></div><div class="ph dk w60"></div></div>
+          <div class="trace"><svg viewBox="0 0 1000 56" preserveAspectRatio="none" data-trace></svg></div>
+        </div>
+        <div class="sec">
+          <div class="secnum">01</div>
+          <div class="t-h2">Upload &amp; review</div>
+          <div class="grid2" style="margin-top:16px;">
+            <div class="wf pad" data-pin="3">
+              <div class="t-h">Your recording</div>
+              <div class="col" style="gap:8px; margin-top:12px;"><div class="ph w60"></div><div class="drop" style="padding:14px;">Drop file or click to browse</div><div class="ph w45"></div><div class="btn block off">Detect seizures</div></div>
+            </div>
+            <div class="wf pad" data-pin="4">
+              <div class="t-h">Recording summary</div>
+              <div class="stat" style="margin-top:12px;">
+                <div><div class="t-cap">Recording</div><div class="v">—</div></div>
+                <div><div class="t-cap">Events</div><div class="v">—</div></div>
+                <div><div class="t-cap">Total ictal</div><div class="v">—</div></div>
+                <div><div class="t-cap">Avg confidence</div><div class="v">—</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="wf dash pad" style="margin-top:16px; text-align:center;" data-pin="5"><span class="t-s">Event review workspace, shown after detection (see W6)</span></div>
+        </div>
+        <div class="sec pin-in" style="background:var(--fill);" data-pin="6">
+          <div class="secnum">02</div>
+          <div class="t-h2">Processing pipeline</div>
+          <div class="grid4" style="margin-top:16px;">
+            <div class="wf pad"><div class="t-cap">Step 1</div><div class="t-h">Preprocessing</div><div class="col" style="gap:6px; margin-top:8px;"><div class="ph"></div><div class="ph w75"></div></div></div>
+            <div class="wf pad"><div class="t-cap">Step 2</div><div class="t-h">Inference</div><div class="col" style="gap:6px; margin-top:8px;"><div class="ph"></div><div class="ph w75"></div></div></div>
+            <div class="wf pad"><div class="t-cap">Step 3</div><div class="t-h">Post-processing</div><div class="col" style="gap:6px; margin-top:8px;"><div class="ph"></div><div class="ph w75"></div></div></div>
+            <div class="wf pad"><div class="t-cap">Step 4</div><div class="t-h">Output</div><div class="col" style="gap:6px; margin-top:8px;"><div class="ph"></div><div class="ph w75"></div></div></div>
+          </div>
+        </div>
+        <div class="sec pin-in" data-pin="7">
+          <div class="secnum">03</div>
+          <div class="t-h2">Test data &amp; offline use</div>
+          <div class="wf" style="margin-top:16px;">
+            <div class="row" style="padding:10px 14px; border-bottom:1px solid var(--line-2);"><span class="t-m">sample_mouse_01.edf</span><span class="sp"></span><span class="t-s t-m">EDF · 2.4 MB</span><span class="btn ghost sm">Download</span></div>
+            <div class="row" style="padding:10px 14px; border-bottom:1px solid var(--line-2);"><span class="t-m">sample_mouse_02.csv</span><span class="sp"></span><span class="t-s t-m">CSV · 1.1 MB</span><span class="btn ghost sm">Download</span></div>
+            <div class="row" style="padding:10px 14px;"><span>Run IctalX on your own machine</span><span class="sp"></span><span class="btn ghost sm">Guide</span></div>
+          </div>
+        </div>
+        <div class="sec pin-in" style="background:var(--fill-2);" data-pin="8">
+          <div class="t-cap">Cite the work</div>
+          <div class="col" style="gap:7px; margin-top:10px;"><div class="ph dk w90"></div><div class="wf" style="height:70px; background:var(--paper);"></div><div class="ph w45"></div></div>
+          <div class="row" style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line);"><span class="logo" style="font-size:14px;">IctalX</span><span class="t-s">Research aid, not a clinical device.</span></div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      <h3>Notes</h3>
+      <ol>
+        <li><b>Top bar.</b> Stays fixed on scroll. Links jump to sections 01 to 03. Contact jumps to the cite block.</li>
+        <li><b>Hero.</b> One-line purpose and a short description. The trace is decorative and stops moving when the user prefers reduced motion.</li>
+        <li><b>Recording card.</b> States in W2 to W5.</li>
+        <li><b>Summary card.</b> Empty until a detection run. Then shows length, events, ictal time, confidence, reviewed, confirmed, rejected and the analysis ID.</li>
+        <li><b>Review workspace.</b> Hidden until detection completes. See W6.</li>
+        <li><b>Pipeline.</b> Four steps in plain words. Full parameters are referred to the paper.</li>
+        <li><b>Test data and offline use.</b> Sample files and a guide for running the app locally.</li>
+        <li><b>Cite and footer.</b> Citation, BibTeX with copy button, contact, licence and the research-use disclaimer. No edit mode toolbar.</li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= W2 ======================= -->
+<section class="board" id="w2">
+  <div class="board-head"><span class="bid">W2</span><h2>Recording card, EDF</h2><span class="ctx">File chosen, header read, ready to run</span></div>
+  <div class="board-body">
+    <div class="screen">
+      <div class="canvas">
+        <div class="wf pad" style="max-width:520px; margin:0 auto;">
+          <div class="t-h">Your recording</div>
+          <div class="t-s" style="margin-top:2px;" data-pin="2">Single channel of mouse EEG. Your file is processed and then deleted.</div>
+          <div style="margin-top:16px;"><span class="seg" data-pin="1"><span class="on">EDF</span><span>CSV</span></span></div>
+          <div class="drop" style="margin-top:16px;" data-pin="3">Drop your <b>EDF</b> file here<br><span class="t-s">or click to browse</span></div>
+          <div class="chip" style="margin-top:12px;" data-pin="4"><span>mouse_03_day2.edf</span><span class="t-m t-s">412.6 MB</span><span class="x">×</span></div>
+          <div class="field" style="margin-top:16px;" data-pin="5">
+            <span class="t-cap">Channel</span>
+            <span class="inp dd">EEG1</span>
+            <span class="t-s">4 channels in file: EEG1, EEG2, EMG, ACC</span>
+          </div>
+          <div class="grid2" style="margin-top:14px;" data-pin="6">
+            <div class="field"><span class="t-cap">Sampling rate</span><span class="inp ro">500 Hz · from file</span></div>
+            <div class="field"><span class="t-cap">Unit</span><span class="inp ro">µV · from file</span></div>
+            <div class="field" style="grid-column:1/-1;"><span class="t-cap">Start time</span><span class="inp ro">2026-03-02 09:00:00 · from file</span></div>
+          </div>
+          <div class="btn block" style="margin-top:18px;" data-pin="7">Detect seizures</div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      <h3>Notes</h3>
+      <ol>
+        <li><b>Format switch.</b> EDF or CSV. Switching clears the chosen file and fields.</li>
+        <li><b>Privacy line.</b> Exact wording: “Your file is processed and then deleted.”</li>
+        <li><b>Drop zone.</b> Drag and drop or click. Accepts .edf in EDF mode. Keyboard: Enter or Space opens the file picker.</li>
+        <li><b>File chip.</b> Name, size and remove button.</li>
+        <li><b>Channel.</b> Filled from the EDF header, read in the browser. Multi-channel files are accepted; only the chosen channel is analysed. Nothing is uploaded yet.</li>
+        <li><b>Header values.</b> Read-only, shown so the user can check them before running.</li>
+        <li><b>Detect seizures.</b> Enabled once a file and channel are set. Uploads the file and starts the run (W5).</li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= W3 ======================= -->
+<section class="board" id="w3">
+  <div class="board-head"><span class="bid">W3</span><h2>Recording card, CSV</h2><span class="ctx">User supplies what the file cannot</span></div>
+  <div class="board-body">
+    <div class="screen">
+      <div class="canvas">
+        <div class="wf pad" style="max-width:520px; margin:0 auto;">
+          <div class="t-h">Your recording</div>
+          <div class="t-s" style="margin-top:2px;">Single channel of mouse EEG. Your file is processed and then deleted.</div>
+          <div style="margin-top:16px;"><span class="seg"><span>EDF</span><span class="on">CSV</span></span></div>
+          <div class="drop" style="margin-top:16px;">Drop your <b>CSV</b> file here<br><span class="t-s">or click to browse</span></div>
+          <div class="chip" style="margin-top:12px;"><span>mouse_07.csv</span><span class="t-m t-s">88.4 MB</span><span class="x">×</span></div>
+          <div class="grid2" style="margin-top:16px;">
+            <div class="field" data-pin="1"><span class="t-cap">Signal column</span><span class="inp dd">eeg</span></div>
+            <div class="field" data-pin="2"><span class="t-cap">Sampling rate (Hz)</span><span class="inp">500</span></div>
+            <div class="field" data-pin="3"><span class="t-cap">Unit</span><span class="inp dd">µV</span></div>
+            <div class="field" data-pin="4"><span class="t-cap">Time column (optional)</span><span class="inp dd empty">None</span></div>
+            <div class="field" style="grid-column:1/-1;"><span class="t-cap">Start time (optional)</span><span class="inp empty">YYYY-MM-DD hh:mm:ss</span></div>
+          </div>
+          <div class="btn block" style="margin-top:18px;">Detect seizures</div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      <h3>Notes</h3>
+      <ol>
+        <li><b>Signal column.</b> Dropdown filled from the CSV header row, read in the browser.</li>
+        <li><b>Sampling rate.</b> Required. Default 500 Hz. Must match the model rate (TBC from codebase).</li>
+        <li><b>Unit.</b> µV or mV. Converted to the training unit before preprocessing.</li>
+        <li><b>Optional fields.</b> Time column must be monotonic and agree with the sampling rate. Start time is used for display and export only.</li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= W4 ======================= -->
+<section class="board" id="w4">
+  <div class="board-head"><span class="bid">W4</span><h2>Validation error</h2><span class="ctx">File rejected by the server</span></div>
+  <div class="board-body">
+    <div class="screen">
+      <div class="canvas">
+        <div class="wf pad" style="max-width:520px; margin:0 auto;">
+          <div class="t-h">Your recording</div>
+          <div class="t-s" style="margin-top:2px;">Single channel of mouse EEG. Your file is processed and then deleted.</div>
+          <div style="margin-top:16px;"><span class="seg"><span>EDF</span><span class="on">CSV</span></span></div>
+          <div class="chip" style="margin-top:16px;"><span>mouse_07.csv</span><span class="t-m t-s">88.4 MB</span><span class="x">×</span></div>
+          <div class="alert pin-out" style="margin-top:14px;" data-pin="1">
+            <div class="t">File not accepted</div>
+            <div style="margin-top:4px;">Sampling rate is 1000 Hz. IctalX requires 500 Hz.</div>
+            <div class="t-s pin-out" style="margin-top:10px; width:max-content;" data-pin="2"><span class="t-m">Check V05</span></div>
+            <div class="t-s pin-out" style="margin-top:4px; width:max-content;" data-pin="3">The file was not analysed and has been deleted.</div>
+          </div>
+          <div class="btn block off" style="margin-top:18px;" data-pin="4">Detect seizures</div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      <h3>Notes</h3>
+      <ol>
+        <li><b>Error panel.</b> Appears under the file chip. One plain sentence that says what is wrong and what is needed.</li>
+        <li><b>Check code.</b> Shown so users can quote it when asking for help.</li>
+        <li><b>Deletion.</b> A rejected file is deleted at once and never analysed.</li>
+        <li><b>Button.</b> Disabled until the user changes a field or chooses another file.</li>
+      </ol>
+      <div class="sub">
+        <h3>Checks</h3>
+        <table>
+          <tr><td>V01</td><td>Not EDF or CSV</td></tr>
+          <tr><td>V02</td><td>Damaged, cannot be read</td></tr>
+          <tr><td>V03</td><td>No signal data</td></tr>
+          <tr><td>V04</td><td>Channel not found</td></tr>
+          <tr><td>V05</td><td>Wrong sampling rate</td></tr>
+          <tr><td>V06</td><td>Values out of range</td></tr>
+          <tr><td>V07</td><td>Larger than 1 GB</td></tr>
+          <tr><td>V08</td><td>Shorter than 5 s</td></tr>
+        </table>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= W5 ======================= -->
+<section class="board" id="w5">
+  <div class="board-head"><span class="bid">W5</span><h2>Detection in progress</h2><span class="ctx">Replaces the Detect button while running</span></div>
+  <div class="board-body">
+    <div class="screen">
+      <div class="canvas">
+        <div class="wf pad" style="max-width:520px; margin:0 auto;">
+          <div class="t-h">Your recording</div>
+          <div class="chip" style="margin-top:14px;"><span>mouse_03_day2.edf</span><span class="t-m t-s">412.6 MB · EEG1</span></div>
+          <div class="row" style="margin-top:18px;" data-pin="1"><span class="t-cap">Analysis</span><span class="t-m">AX-7F3C2A</span></div>
+          <div class="steps pin-out" style="margin-top:14px;" data-pin="2">
+            <div class="step"><span class="box done">✓</span>Uploading<span class="sp"></span><span class="t-m t-s">100%</span></div>
+            <div class="step"><span class="box done">✓</span>Validating</div>
+            <div class="step"><span class="box done">✓</span>Preprocessing</div>
+            <div class="step"><span class="box now"></span><b>Inference</b><span class="sp"></span><span class="t-m t-s">18,240 / 34,560 segments</span></div>
+            <div class="bar pin-out" data-pin="3"><i style="width:53%"></i></div>
+            <div class="step todo"><span class="box"></span>Post-processing</div>
+            <div class="step todo"><span class="box"></span>Preparing event windows</div>
+          </div>
+          <div class="btn block ghost" style="margin-top:18px;" data-pin="4">Cancel</div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      <h3>Notes</h3>
+      <ol>
+        <li><b>Analysis ID.</b> Assigned once the file passes validation. Used in all export file names.</li>
+        <li><b>Stages.</b> Done, current and to-do. The current stage is announced to screen readers.</li>
+        <li><b>Inference progress.</b> Segments done out of total. 34,560 segments is a 24-hour recording at a 2.5 s step.</li>
+        <li><b>Cancel.</b> Stops the run and deletes the uploaded file.</li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= W6 ======================= -->
+<section class="board" id="w6">
+  <div class="board-head"><span class="bid">W6</span><h2>Review workspace</h2><span class="ctx">Master list above, selected event below</span></div>
+  <div class="board-body">
+    <div class="screen">
+      <div class="canvas">
+        <div class="notice" data-pin="1"><span class="ic">i</span><span>Results are not saved on the server. Download them before you close this page.</span><span class="sp"></span><span class="t-s">Dismiss</span></div>
+
+        <div class="wf" style="margin-top:16px;">
+          <div class="row" style="padding:14px 18px; border-bottom:1px solid var(--line-2);">
+            <span class="t-h">Event review</span>
+            <span class="sp"></span>
+            <span class="row" data-pin="2"><span class="btn ghost sm">Download events.csv</span><span class="btn ghost sm">Download report (.zip)</span></span>
+          </div>
+
+          <div class="row" style="padding:12px 18px;">
+            <span class="t-cap">Detected events · select to review</span>
+            <span class="sp"></span>
+            <span class="row" data-pin="3"><span class="inp dd" style="height:28px; font-size:12px; width:150px;">Status: All</span><span class="inp dd" style="height:28px; font-size:12px; width:150px;">Sort: Onset</span></span>
+          </div>
+          <div data-pin="4" style="border-top:1px solid var(--line-2); border-bottom:1px solid var(--line);">
+            <table class="tbl">
+              <thead><tr><th>#</th><th class="num">Onset</th><th class="num">Offset</th><th class="num">Duration</th><th class="num">Mean p</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td class="num">34.85 s</td><td class="num">73.35 s</td><td class="num">38.50 s</td><td class="num">0.94</td><td><span class="pill solid">Confirmed</span></td></tr>
+                <tr class="sel"><td>2</td><td class="num">1,812.40 s</td><td class="num">1,864.40 s</td><td class="num">52.00 s</td><td class="num">0.97</td><td><span class="pill">Pending</span></td></tr>
+                <tr><td>3</td><td class="num">5,420.02 s</td><td class="num">5,447.52 s</td><td class="num">27.50 s</td><td class="num">0.81</td><td><span class="pill out">Rejected</span></td></tr>
+                <tr><td>4</td><td class="num">9,104.70 s</td><td class="num">9,165.70 s</td><td class="num">61.00 s</td><td class="num">0.99</td><td><span class="pill">Pending</span></td></tr>
+                <tr><td>5</td><td class="num">14,233.10 s</td><td class="num">14,277.60 s</td><td class="num">44.50 s</td><td class="num">0.88</td><td><span class="pill">Pending</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="padding:18px;">
+            <div class="row"><span class="t-h">Event 2</span><span class="sp"></span><span class="pill">Pending review</span></div>
+            <div class="feat" style="margin-top:12px;" data-pin="5">
+              <div><div class="t-cap">Onset</div><div class="v">1,812.40 s</div></div>
+              <div><div class="t-cap">Offset</div><div class="v">1,864.40 s</div></div>
+              <div><div class="t-cap">Duration</div><div class="v">52.00 s</div></div>
+              <div><div class="t-cap">Peak amp</div><div class="v">TBC</div></div>
+              <div><div class="t-cap">Kurtosis</div><div class="v">TBC</div></div>
+              <div><div class="t-cap">Skewness</div><div class="v">TBC</div></div>
+              <div><div class="t-cap">Envelope</div><div class="v">TBC</div></div>
+              <div><div class="t-cap">Mean probability</div><div class="v">0.97</div></div>
+            </div>
+
+            <div class="vizcap"><span class="t-cap">Preprocessed signal · 120 s before onset to 120 s after offset</span><span class="t-cap" style="text-transform:none;">z-score · fs from file</span></div>
+            <div class="viz" data-pin="6"><svg data-wave='{"start":1692.4,"onset":1812.4,"offset":1864.4,"end":1984.4,"rec0":0}' viewBox="0 0 1000 170"></svg></div>
+
+            <div class="vizcap"><span class="t-cap">Spectrogram · preprocessed signal · same window</span><span class="t-cap">0–250 Hz (fs / 2)</span></div>
+            <div class="viz" data-pin="7"><svg data-spec='{"start":1692.4,"onset":1812.4,"offset":1864.4,"end":1984.4,"rec0":0}' viewBox="0 0 1000 120"></svg></div>
+
+            <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line-2);">
+              <div class="t-h" style="font-size:14px;">Review this event</div>
+              <div class="row pin-out" style="margin-top:12px; width:max-content;" data-pin="8">
+                <span class="btn sel" style="width:170px;">✓ Confirm <span class="t-m t-s">C</span></span>
+                <span class="btn ghost" style="width:170px;">✕ Reject <span class="t-m t-s">R</span></span>
+              </div>
+              <div class="row pin-out" style="margin-top:12px; width:max-content; padding-right:6px;" data-pin="9">
+                <span class="btn">Save review <span class="t-m" style="opacity:.7;">S</span></span>
+                <span class="row t-s" style="gap:6px;"><span style="width:7px; height:7px; border-radius:50%; background:var(--dark); display:inline-block;"></span>Unsaved decision</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      <h3>Notes</h3>
+      <ol>
+        <li><b>Session notice.</b> Shown once per session. There is no database; results live in server memory until the session expires.</li>
+        <li><b>Downloads.</b> events.csv, or a .zip with events.csv, summary.json and a waveform and spectrogram image per event.</li>
+        <li><b>Filter and sort.</b> Filter by status. Sort by onset or probability.</li>
+        <li><b>Event table.</b> Scrolls inside its own panel. The selected row is marked. Up and Down keys move between events.</li>
+        <li><b>Descriptors.</b> Peak amplitude, kurtosis, skewness and envelope. Definitions to be supplied (TBC). Probability is the mean over the event.</li>
+        <li><b>Waveform.</b> Preprocessed signal (notch, DC removal, robust z-score) of the chosen channel, from 120 s before onset to 120 s after offset. Built from the same 40-segment blocks as detection. The event selected in the table is highlighted. Time labels at both ends.</li>
+        <li><b>Spectrogram.</b> Same window as the waveform, preprocessed signal, 0 Hz to the Nyquist frequency (fs / 2; 250 Hz at 500 Hz). A red rectangle outlines the seizure. Settings as in missed_seizure_audit.py: 1 s windows, 75% overlap.</li>
+        <li><b>Decision.</b> Confirm or Reject sets a draft. Pressing the active choice again clears it. Shortcuts C and R.</li>
+        <li><b>Save.</b> Saves the draft. While a draft is unsaved the marker shows, and moving away opens W8. Shortcut S or Enter.</li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= W7 ======================= -->
+<section class="board" id="w7">
+  <div class="board-head"><span class="bid">W7</span><h2>Event near recording edge</h2><span class="ctx">Detail view, waveform and spectrogram only</span></div>
+  <div class="board-body">
+    <div class="screen">
+      <div class="canvas">
+        <div class="row"><span class="t-h">Event 1</span><span class="sp"></span><span class="pill solid">Confirmed</span></div>
+        <div class="vizcap"><span class="t-cap">Preprocessed signal · 120 s before onset to 120 s after offset</span><span class="t-cap" style="text-transform:none;">z-score · fs from file</span></div>
+        <div class="viz" data-pin="1"><svg data-wave='{"start":-85.15,"onset":34.85,"offset":73.35,"end":193.35,"rec0":0}' viewBox="0 0 1000 170"></svg></div>
+        <div class="vizcap"><span class="t-cap">Spectrogram · preprocessed signal · same window</span><span class="t-cap">0–250 Hz (fs / 2)</span></div>
+        <div class="viz" data-pin="2"><svg data-spec='{"start":-85.15,"onset":34.85,"offset":73.35,"end":193.35,"rec0":0}' viewBox="0 0 1000 120"></svg></div>
+      </div>
+    </div>
+    <aside class="notes">
+      <h3>Notes</h3>
+      <ol>
+        <li><b>Padding.</b> This event starts 34.85 s into the recording, so only 34.85 s of the 120 s before onset exist. The missing 85.15 s is padded and shown hatched, labelled “No data”. The same applies at the end of a recording.</li>
+        <li><b>Same layout every time.</b> Because of the padding, the seizure always sits at the same place on screen, which makes events easy to compare. Report images follow the same rule.</li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= W8 ======================= -->
+<section class="board" id="w8">
+  <div class="board-head"><span class="bid">W8</span><h2>Unsaved decision prompt</h2><span class="ctx">Modal over the review workspace</span></div>
+  <div class="board-body">
+    <div class="screen">
+      <div class="canvas flush">
+        <div class="modal-wrap">
+          <div class="modal-bg">
+            <div class="wf" style="height:100%; padding:18px;">
+              <div class="col" style="gap:10px;"><div class="ph tall w30"></div><div class="ph"></div><div class="ph"></div><div class="ph w90"></div><div class="ph"></div><div class="ph w75"></div></div>
+              <div class="wf fill" style="height:120px; margin-top:20px;"></div>
+            </div>
+          </div>
+          <div class="scrim"></div>
+          <div class="modal" data-pin="1">
+            <div class="t-h">Unsaved decision</div>
+            <p style="margin:8px 0 0; color:var(--ink-2);">Event 2 is marked Confirmed but not saved. What would you like to do?</p>
+            <div class="row" style="margin-top:20px; justify-content:flex-end;" data-pin="2" data-pin-l>
+              <span class="btn ghost sm">Stay</span>
+              <span class="btn ghost sm">Discard</span>
+              <span class="btn sm">Save</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      <h3>Notes</h3>
+      <ol>
+        <li><b>When it appears.</b> The reviewer selects another event, or uses Up or Down, while a draft is unsaved. Focus moves into the prompt; Escape equals Stay.</li>
+        <li><b>Choices.</b> Save keeps the decision and moves on. Discard drops the draft and moves on. Stay closes the prompt and keeps the current event. Save is the default button.</li>
+      </ol>
+      <div class="sub">
+        <h3>Leaving the page</h3>
+        <p style="margin:0;">Closing or reloading the tab with an unsaved draft or with results not yet downloaded triggers the browser's own leave-page warning. Its wording cannot be changed.</p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= W9 ======================= -->
+<section class="board" id="w9">
+  <div class="board-head"><span class="bid">W9</span><h2>Mobile layout</h2><span class="ctx">375 px · single column</span></div>
+  <div class="board-body">
+    <div class="screen">
+      <div class="canvas" style="background:var(--fill);">
+        <div class="phone">
+          <div class="scr">
+            <div class="sitebar" style="padding:0 14px; height:46px;"><span class="logo" style="font-size:15px;">IctalX</span><span class="sp"></span><span class="btn sm">Contact</span></div>
+            <div style="padding:14px;" class="col">
+              <div class="wf pad" style="padding:14px;" data-pin="1">
+                <div class="t-h">Your recording</div>
+                <div style="margin-top:10px;"><span class="seg"><span class="on">EDF</span><span>CSV</span></span></div>
+                <div class="drop" style="margin-top:10px; padding:14px;">Tap to choose a file</div>
+                <div class="btn block off" style="margin-top:10px;">Detect seizures</div>
+              </div>
+              <div class="stat">
+                <div><div class="t-cap">Events</div><div class="v">5</div></div>
+                <div><div class="t-cap">Reviewed</div><div class="v">2<small>/5</small></div></div>
+              </div>
+              <div class="wf" data-pin="2">
+                <table class="tbl">
+                  <thead><tr><th>#</th><th class="num">Onset</th><th class="num">Dur</th><th class="num">Mean p</th><th>Status</th></tr></thead>
+                  <tbody>
+                    <tr><td>1</td><td class="num">34.9 s</td><td class="num">38.5</td><td class="num">.94</td><td><span class="pill solid">Conf.</span></td></tr>
+                    <tr class="sel"><td>2</td><td class="num">1,812.4 s</td><td class="num">52.0</td><td class="num">.97</td><td><span class="pill">Pend.</span></td></tr>
+                    <tr><td>3</td><td class="num">5,420.0 s</td><td class="num">27.5</td><td class="num">.81</td><td><span class="pill out">Rej.</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="wf pad" style="padding:14px;" data-pin="3">
+                <div class="row"><span class="t-h">Event 2</span><span class="sp"></span><span class="pill">Pending</span></div>
+                <div class="grid2" style="gap:8px; margin-top:10px;"><div class="ph"></div><div class="ph"></div><div class="ph"></div><div class="ph"></div></div>
+                <div class="viz" style="margin-top:12px;"><svg data-wave='{"start":1692.4,"onset":1812.4,"offset":1864.4,"end":1984.4,"rec0":0,"compact":true}' viewBox="0 0 1000 220"></svg></div>
+                <div class="viz" style="margin-top:8px;"><svg data-spec='{"start":1692.4,"onset":1812.4,"offset":1864.4,"end":1984.4,"rec0":0,"compact":true}' viewBox="0 0 1000 160"></svg></div>
+                <div class="grid2" style="gap:8px; margin-top:12px;"><span class="btn ghost sm">✓ Confirm</span><span class="btn ghost sm">✕ Reject</span></div>
+                <div class="btn block sm" style="margin-top:8px;">Save review</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      <h3>Notes</h3>
+      <ol>
+        <li><b>Single column.</b> Cards stack in page order. Drag and drop is replaced by a file picker.</li>
+        <li><b>Table.</b> Offset column is dropped; it stays in the detail view. Status labels are shortened.</li>
+        <li><b>Detail.</b> Descriptors in two columns. Waveform and spectrogram keep the full window. The layout is designed for desktop first; review on a phone is supported, not optimised.</li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<footer class="footnote">
+  <span>IctalX Wireframes · v0.3 · 25 Oct 2026</span>
+  <span>Values marked TBC are still to be supplied. Signals shown are illustrative.</span>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+  var NS = "http://www.w3.org/2000/svg";
+  function el(name, attrs, parent){
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function rand(seed){
+    var s = seed >>> 0;
+    return function(){ s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  }
+  function fmt(t){
+    var v = Math.round(t * 10) / 10;
+    return v.toLocaleString("en-GB", {minimumFractionDigits:1, maximumFractionDigits:1}) + " s";
+  }
+  function hatch(svg){
+    var defs = el("defs", {}, svg);
+    var p = el("pattern", {id:"hatch" + Math.random().toString(36).slice(2,7), width:"8", height:"8", patternUnits:"userSpaceOnUse", patternTransform:"rotate(45)"}, defs);
+    el("rect", {width:"8", height:"8", fill:"#F3F4F6"}, p);
+    el("rect", {width:"4", height:"8", fill:"#E5E7EB"}, p);
+    return "url(#" + p.id + ")";
+  }
+
+  /* Hero trace */
+  document.querySelectorAll("svg[data-trace]").forEach(function(svg){
+    var d = "", r = rand(7);
+    for (var x = 0; x <= 1000; x += 2){
+      var c = Math.abs(x - 560), env = Math.exp(-(c * c) / (2 * 60 * 60));
+      var y = 28 + Math.sin(x * 0.09) * 3 + (r() - 0.5) * 4 + env * Math.sin(x * 0.7) * 22;
+      d += (x ? "L" : "M") + x + " " + y.toFixed(1);
+    }
+    el("path", {d:d, fill:"none", stroke:"#8A929E", "stroke-width":"1.5", "vector-effect":"non-scaling-stroke"}, svg);
+  });
+
+  /* Waveform */
+  document.querySelectorAll("svg[data-wave]").forEach(function(svg, i){
+    var o = JSON.parse(svg.getAttribute("data-wave"));
+    var vb = svg.viewBox.baseVal, W = vb.width, H = vb.height;
+    var top = o.compact ? 34 : 26, bot = H - 24, mid = (top + bot) / 2;
+    var span = o.end - o.start, tx = function(t){ return (t - o.start) / span * W; };
+    var fs = o.compact ? 26 : 13;
+    var fill = hatch(svg);
+
+    el("rect", {x:0, y:0, width:W, height:H, fill:"#FFFFFF"}, svg);
+    for (var g = 1; g < 12; g++) el("line", {x1:g * W / 12, x2:g * W / 12, y1:top, y2:bot, stroke:"#EEF0F3", "stroke-width":"1"}, svg);
+    el("line", {x1:0, x2:W, y1:mid, y2:mid, stroke:"#E5E7EB", "stroke-width":"1"}, svg);
+
+    var recStart = Math.max(o.start, o.rec0);
+    if (o.start < o.rec0){
+      var px = tx(o.rec0);
+      el("rect", {x:0, y:top, width:px, height:bot - top, fill:fill}, svg);
+      el("line", {x1:px, x2:px, y1:top, y2:bot, stroke:"#8A929E", "stroke-width":"1", "stroke-dasharray":"3 3"}, svg);
+      var nt = el("text", {x:px / 2, y:mid + 4, "text-anchor":"middle", "font-size":fs, fill:"#8A929E", "font-family":"Segoe UI, system-ui, sans-serif"}, svg);
+      nt.textContent = "No data · padding";
+      var z = el("text", {x:px + 6, y:H - 7, "font-size":fs, fill:"#4B5563", "font-family":"Consolas, ui-monospace, monospace"}, svg);
+      z.textContent = fmt(o.rec0) + " · recording start";
+    }
+
+    var sx = tx(o.onset), ex = tx(o.offset);
+    el("rect", {x:sx, y:top, width:ex - sx, height:bot - top, fill:"#FCEBC8"}, svg);
+    [sx, ex].forEach(function(xp){ el("line", {x1:xp, x2:xp, y1:top, y2:bot, stroke:"#F5C46B", "stroke-width":"2"}, svg); });
+
+    var r = rand(31 + i), d = "", first = true;
+    for (var x = Math.ceil(tx(recStart)); x <= W; x += 1.5){
+      var t = o.start + x / W * span, y = (r() - 0.5) * 10 + Math.sin(t * 1.7) * 3;
+      if (t >= o.onset && t <= o.offset){
+        var u = (t - o.onset) / (o.offset - o.onset);
+        y += Math.sin(Math.PI * u) * Math.sin(t * 9) * (mid - top - 6) * (0.75 + 0.25 * r());
+      }
+      d += (first ? "M" : "L") + x.toFixed(1) + " " + (mid - y).toFixed(1);
+      first = false;
+    }
+    el("path", {d:d, fill:"none", stroke:"#3B4048", "stroke-width":"1.2", "stroke-linejoin":"round"}, svg);
+
+    var lab = el("text", {x:Math.min(Math.max((sx + ex) / 2, 140), W - 140), y:top - (o.compact ? 8 : 9), "text-anchor":"middle", "font-size":fs, "font-weight":"600", fill:"#7A5100", "font-family":"Segoe UI, system-ui, sans-serif"}, svg);
+    lab.textContent = "Seizure " + fmt(o.onset) + " – " + fmt(o.offset);
+    var l1 = o.start < o.rec0 ? null : el("text", {x:6, y:H - 7, "font-size":fs, fill:"#4B5563", "font-family":"Consolas, ui-monospace, monospace"}, svg);
+    if (l1) l1.textContent = fmt(o.start);
+    var l2 = el("text", {x:W - 6, y:H - 7, "text-anchor":"end", "font-size":fs, fill:"#4B5563", "font-family":"Consolas, ui-monospace, monospace"}, svg);
+    l2.textContent = fmt(o.end);
+  });
+
+  /* Spectrogram */
+  document.querySelectorAll("svg[data-spec]").forEach(function(svg, i){
+    var o = JSON.parse(svg.getAttribute("data-spec"));
+    var vb = svg.viewBox.baseVal, W = vb.width, H = vb.height;
+    var span = o.end - o.start, tx = function(t){ return (t - o.start) / span * W; };
+    var cols = 100, rows = 24, cw = W / cols, ch = H / rows, r = rand(91 + i);
+    var fill = hatch(svg);
+    var shades = ["#FFFFFF","#F3F4F6","#E5E7EB","#D1D5DB","#B9BFC8","#8A929E","#4B5563"];
+    for (var c = 0; c < cols; c++){
+      var t = o.start + (c + 0.5) / cols * span;
+      if (t < o.rec0) continue;
+      var inS = t >= o.onset && t <= o.offset;
+      for (var k = 0; k < rows; k++){
+        var f = k / rows;
+        var e = 0.12 * r() + (1 - f) * 0.12;
+        if (inS) e += Math.exp(-Math.pow(f - 0.22, 2) / 0.03) * (0.7 + 0.3 * r());
+        var idx = Math.min(shades.length - 1, Math.floor(e * shades.length));
+        el("rect", {x:(c * cw).toFixed(2), y:(H - (k + 1) * ch).toFixed(2), width:(cw + 0.6).toFixed(2), height:(ch + 0.6).toFixed(2), fill:shades[idx]}, svg);
+      }
+    }
+    if (o.start < o.rec0){
+      var px = tx(o.rec0);
+      el("rect", {x:0, y:0, width:px, height:H, fill:fill}, svg);
+      el("line", {x1:px, x2:px, y1:0, y2:H, stroke:"#8A929E", "stroke-width":"1", "stroke-dasharray":"3 3"}, svg);
+    }
+    el("rect", {x:tx(o.onset), y:1.5, width:tx(o.offset) - tx(o.onset), height:H - 3, fill:"none", stroke:"#D62828", "stroke-width":"3"}, svg);
+  });
+})();
+</script>
+</body>
+</html>
