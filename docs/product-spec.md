@@ -406,7 +406,9 @@ While a detection runs, the button area shows:
 
 ### 10.4 Review workspace
 
-Master list, then detail, stacked vertically as in the prototype.
+One card, top to bottom: title and downloads, filter and sort controls, detail view, event table. The same order applies on phones.
+
+The detail view is pinned: it stays in place at the top of the card, and only the event table scrolls, inside its own panel. Selecting a row (click or arrow keys) changes what the detail view shows and scrolls the table panel, never the page, so the selected row stays visible. The whole page still scrolls normally.
 
 **Event table:** number, onset, offset, duration, mean probability, status. Onset and offset show both elapsed time and clock time. Sortable by onset and probability. Filter by status. Scrolls inside its own panel.
 
@@ -599,6 +601,7 @@ Answered questions are kept for the record; the answer is in the section named.
 | 2026-10-24 | Unsaved decisions trigger a Save / Discard / Stay prompt. |
 | 2026-10-24 | Edit mode toolbar removed from the product. |
 | 2026-10-24 | Privacy line: "Your file is processed and then deleted." |
+| 2026-10-27 | Review card reordered: detail view pinned above the scrollable event table; filters stay at the top of the card. |
 
 ## 17. Glossary
 

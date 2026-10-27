@@ -179,15 +179,6 @@
           </select>
         </div>
       </div>
-      <div class="m-scroll">
-        <table class="events" aria-label="Detected seizure events">
-          <thead>
-            <tr><th>#</th><th>Onset</th><th class="c-off">Offset</th><th>Dur</th><th>Mean p</th><th>Status</th></tr>
-          </thead>
-          <tbody id="evBody"></tbody>
-        </table>
-        <div class="empty" id="noEvents" hidden>No seizure events were detected in this recording.</div>
-      </div>
 
       <div class="detail" id="detail" hidden>
         <div class="detail-head">
@@ -226,6 +217,16 @@
             <span class="unsaved" id="unsavedFlag" hidden>Unsaved decision</span>
           </div>
         </div>
+      </div>
+
+      <div class="m-scroll">
+        <table class="events" aria-label="Detected seizure events">
+          <thead>
+            <tr><th>#</th><th>Onset</th><th class="c-off">Offset</th><th>Dur</th><th>Mean p</th><th>Status</th></tr>
+          </thead>
+          <tbody id="evBody"></tbody>
+        </table>
+        <div class="empty" id="noEvents" hidden>No seizure events were detected in this recording.</div>
       </div>
     </div>
   </div>

@@ -446,6 +446,14 @@ function requestSelect(id) {
   selectEvent(id);
 }
 
+// Scroll only the table box (never the page), so the detail above stays where it is.
+function keepRowInView(tr) {
+  const box = $(".m-scroll"), head = box.querySelector("thead").offsetHeight;
+  const top = tr.offsetTop - head, bottom = tr.offsetTop + tr.offsetHeight - box.clientHeight;
+  if (box.scrollTop > top) box.scrollTop = top;
+  else if (box.scrollTop < bottom) box.scrollTop = bottom;
+}
+
 function selectEvent(id, noFocus) {
   S.selected = id; S.draft = null;
   const e = S.events.find(x => x.event_id === id);
@@ -453,6 +461,7 @@ function selectEvent(id, noFocus) {
     const on = tr.dataset.id === id;
     tr.classList.toggle("sel", on); tr.setAttribute("aria-selected", String(on));
     if (on && !noFocus) tr.focus({ preventScroll: true });
+    if (on) keepRowInView(tr);
   });
   $("#dEvId").textContent = parseInt(id.slice(3), 10);
   const withClock = (node, a, b) => { node.innerHTML = ""; node.append(a); if (b) node.appendChild(el("small", null, b)); };
