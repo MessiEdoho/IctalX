@@ -348,7 +348,7 @@ One row per event, in time order. Columns, in this order (`ictalx/exports.py`, `
 | kurtosis | Section 7.5 | 19.2316 |
 | skewness | Section 7.5 | −2.5081 |
 | envelope_uV | Section 7.5 | 310.49 |
-| probability | Mean smoothed probability, section 7.4 | 0.949695 |
+| model_confidence | Mean smoothed probability, section 7.4 | 0.949695 |
 | status | pending, confirmed or rejected | confirmed |
 
 ### 9.2 Summary report (.zip)
@@ -410,14 +410,16 @@ One card, top to bottom: title and downloads, filter and sort controls, detail v
 
 The detail view is pinned: it stays in place at the top of the card, and only the event table scrolls, inside its own panel. Selecting a row (click or arrow keys) changes what the detail view shows and scrolls the table panel, never the page, so the selected row stays visible. The whole page still scrolls normally.
 
-**Event table:** number, onset, offset, duration, mean probability, status. Onset and offset show both elapsed time and clock time. Sortable by onset and probability. Filter by status. Scrolls inside its own panel.
+**Event table:** number, onset, offset, duration, model confidence, status. Onset and offset show both elapsed time and clock time. Sortable by onset and model confidence. Filter by status. Scrolls inside its own panel.
 
 **Detail view:**
 
 1. Header with event number and status pill.
-2. Descriptor grid (section 7.5).
+2. Descriptor grid (section 7.5). The mean probability (section 7.4) is labelled "Model confidence" and shown as a percentage with one decimal (0.948257 shows as 94.8%), here, in the table and in the summary average. The CSV keeps the value as a fraction from 0 to 1 with 6 decimals.
 3. Waveform: preprocessed signal (z-score) from 120 s before onset to 120 s after offset. The selected seizure is highlighted, with its start and end marked. Time labels at both ends of the window.
-4. Spectrogram: same window, preprocessed signal, 0 Hz to fs / 2 (250 Hz at 500 Hz), with the seizure outlined by a red rectangle.
+4. Spectrogram: same window, preprocessed signal, 0 Hz to fs / 2 (250 Hz at 500 Hz), with the seizure outlined by a red rectangle. A colour bar on the right runs from Low to High power, without numbers or units.
+
+Both plots keep the same strip on the right (frequency labels and colour bar on the spectrogram, empty on the waveform), so the same time falls at the same horizontal position in both and the two seizure highlights line up.
 5. Review controls: Confirm, Reject, Save review, unsaved marker.
 
 **Keyboard:**
@@ -442,12 +444,13 @@ Implemented in `web/index.html`, `web/style.css` and `web/app.js`.
 | Checks in the browser | Before upload the page reads the EDF header and refuses wrong extension (V01), files over 2 GB (V07), a channel not at 500 Hz (V05) and a missing or 01.01.85 start date (V09). The server repeats every check |
 | Header values | Channel list shows each channel's rate. Sampling rate, unit and start time are shown read-only |
 | Upload and progress | Upload percentage, then the server stages of 10.3 polled every second, with queue position and segments processed |
-| Waveform scale | 110% of the largest swing inside the seizure, so artefacts elsewhere in the window do not shrink it; larger values are clipped at the edges. The scale is printed in the corner (for example ±57.9 z) |
-| Spectrogram colours | Viridis, from the 5th to the 99.5th percentile of the window's dB values |
+| Waveform scale | 110% of the largest swing inside the seizure, so artefacts elsewhere in the window do not shrink it; larger values are clipped at the edges. No scale or unit is printed |
+| Spectrogram colours | Viridis, from the 5th to the 99.5th percentile of the window's dB values. The colour bar is labelled Low and High only: the values come from the z-scored signal and are rescaled per event, so the numbers are not comparable between events. The report's colour bar is labelled the same way |
 | Status badge | Always shows the saved decision. A draft shows only on the pressed button and the "Unsaved decision" marker |
 | Starting a new analysis | Asks for confirmation if results are on screen |
 | Leaving the page | Browser warning if a draft is unsaved, a job is running, or results have not been downloaded since the last change |
 | Fonts | Loaded from Google Fonts for now; self-hosting is still to do (section 11) |
+| App failure | Any uncaught error in the page shows a red "IctalX failed" box above the review card, asking the user to reload and run the detection again, with the technical error underneath. The half-filled detail view and table are hidden, so a failure is never mistaken for "no events". Downloads stay available |
 
 ## 11. Data handling and security
 
@@ -602,6 +605,11 @@ Answered questions are kept for the record; the answer is in the section named.
 | 2026-10-24 | Edit mode toolbar removed from the product. |
 | 2026-10-24 | Privacy line: "Your file is processed and then deleted." |
 | 2026-10-27 | Review card reordered: detail view pinned above the scrollable event table; filters stay at the top of the card. |
+| 2026-10-28 | "Mean probability" renamed "Model confidence" in the interface, and the CSV column `probability` renamed `model_confidence`. Table header "Dur" becomes "Duration". |
+| 2026-10-28 | Spectrogram colour bar added, labelled Low and High; "dB", "z-score · 500 Hz" and the waveform's ±z scale removed from the display. Waveform and spectrogram share the same right-hand margin so their seizure highlights line up. The window stays at 120 s before onset and 120 s after offset. |
+| 2026-10-28 | Intro sentence adds "IctalX can miss seizures." |
+| 2026-10-28 | The page shows an "IctalX failed" message on any uncaught error instead of an empty review. |
+| 2026-10-28 | Model confidence shown as a percentage with one decimal in the interface; the CSV keeps the 0 to 1 value. |
 
 ## 17. Glossary
 

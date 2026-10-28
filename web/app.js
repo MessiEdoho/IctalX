@@ -39,6 +39,7 @@ function duration(sec) {
   if (sec >= 60) return { v: (sec / 60).toFixed(1), u: "min" };
   return { v: sec.toFixed(1), u: "s" };
 }
+function pct(p) { return (100 * p).toFixed(1) + "%"; }   // model confidence, 0.948257 -> 94.8%
 function statusLabel(s) { return s === "confirmed" ? "Confirmed" : s === "rejected" ? "Rejected" : "Pending"; }
 let toastTimer;
 function toast(msg) {
@@ -366,10 +367,26 @@ async function cancelDetection() {
 /* ----------------------------------------------------------------- results */
 function resetResults() {
   S.result = null; S.events = []; S.selected = null; S.draft = null; S.windows = {}; S.downloaded = false;
+  $("#appError").hidden = true;
+  $(".m-scroll").hidden = false;
   $("#review").hidden = true;
   $("#sessionNotice").hidden = true;
   ["#stRec", "#stEvents", "#stIctal", "#stConf", "#stReviewed", "#stConfirmed", "#stRejected", "#stId"].forEach(id => $(id).textContent = "—");
 }
+
+// Any uncaught error shows a clear failure message and hides the review, which may be half
+// filled, so that an empty table is never mistaken for "no events".
+function appFailed(err) {
+  console.error(err);
+  $("#appErrorDetail").textContent = "Error: " + (err && err.message ? err.message : String(err));
+  $("#appError").hidden = false;
+  $("#detail").hidden = true;
+  $(".m-scroll").hidden = true;
+  $("#noEvents").hidden = true;
+  $("#appError").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+window.addEventListener("error", e => appFailed(e.error || e.message));
+window.addEventListener("unhandledrejection", e => appFailed(e.reason));
 
 function showResults(body) {
   S.result = body;
@@ -399,7 +416,7 @@ function updateStats() {
   const ictal = duration(ev.reduce((a, e) => a + e.duration_s, 0));
   $("#stIctal").innerHTML = ""; $("#stIctal").append(ev.length ? ictal.v : "0", el("small", null, " " + (ev.length ? ictal.u : "s")));
   $("#stConf").innerHTML = "";
-  if (ev.length) $("#stConf").append((100 * ev.reduce((a, e) => a + e.probability, 0) / ev.length).toFixed(0), el("small", null, "%"));
+  if (ev.length) $("#stConf").append((100 * ev.reduce((a, e) => a + e.model_confidence, 0) / ev.length).toFixed(1), el("small", null, "%"));
   else $("#stConf").textContent = "—";
   const reviewed = ev.filter(e => e.status !== "pending").length;
   $("#stReviewed").innerHTML = ""; $("#stReviewed").append(String(reviewed), el("small", null, "/" + ev.length));
@@ -411,7 +428,7 @@ function updateStats() {
 function visibleEvents() {
   const f = $("#filterSel").value, so = $("#sortSel").value;
   let list = S.events.filter(e => f === "all" || e.status === f);
-  if (so === "prob") list = [...list].sort((a, b) => b.probability - a.probability);
+  if (so === "prob") list = [...list].sort((a, b) => b.model_confidence - a.model_confidence);
   return list;
 }
 
@@ -428,7 +445,7 @@ function renderTable() {
       cell(e.onset_elapsed, e.onset_clock),
       cell(e.offset_elapsed, e.offset_clock, "c-off"),
       cell(e.duration_s.toFixed(1) + " s"),
-      cell(e.probability.toFixed(2)),
+      cell(pct(e.model_confidence)),
     );
     const st = el("td"); st.appendChild(el("span", "pill " + e.status, statusLabel(e.status))); tr.appendChild(st);
     tr.addEventListener("click", () => requestSelect(e.event_id));
@@ -468,7 +485,7 @@ function selectEvent(id, noFocus) {
   withClock($("#dOnset"), e.onset_elapsed, e.onset_clock);
   withClock($("#dOffset"), e.offset_elapsed, e.offset_clock);
   $("#dDur").textContent = e.duration_s.toFixed(1) + " s";
-  $("#dProb").textContent = e.probability.toFixed(3);
+  $("#dProb").textContent = pct(e.model_confidence);
   $("#dPeak").textContent = e.peak_uV.toFixed(1) + " µV";
   $("#dKurt").textContent = e.kurtosis.toFixed(2);
   $("#dSkew").textContent = e.skewness.toFixed(2);
@@ -618,8 +635,12 @@ function gapRuns(statuses) {             // runs of non-valid columns: [start, e
   return runs;
 }
 
+// Both plots leave this strip on the right (frequency labels and colour bar on the
+// spectrogram), so the same time falls at the same x in both.
+const GUTTER = 78;
+
 function drawWaveform(d) {
-  const { ctx, w, h } = sizeCanvas($("#wave"));
+  const c = sizeCanvas($("#wave")), ctx = c.ctx, h = c.h, w = c.w - GUTTER;
   const ws = d.window_start_s, we = d.window_end_s, tx = t => (t - ws) / (we - ws) * w;
   const top = 22, bottom = h - 20, mid = (top + bottom) / 2;
   const W = d.waveform, n = W.t.length, colW = w / n;
@@ -673,7 +694,6 @@ function drawWaveform(d) {
   if (ws < 0) ctx.fillText(hms(0) + " · recording start", tx(0) + 4, h - 6);   // padding before the recording
   else ctx.fillText(hms(ws), 4, h - 6);
   ctx.textAlign = "right"; ctx.fillText(hms(we), w - 4, h - 6);
-  ctx.textAlign = "left"; ctx.fillText("±" + amp.toFixed(1) + " z", 4, 13);
   ctx.fillStyle = "rgba(240,168,30,.95)"; ctx.textAlign = "center"; ctx.textBaseline = "top";
   ctx.fillText("◆ seizure " + hms(d.onset_s) + " – " + hms(d.offset_s), Math.min(Math.max((sx + ex) / 2, 110), w - 110), 5);
 }
@@ -688,7 +708,7 @@ function viridis(v) {
 function drawSpectrogram(d) {
   const { ctx, w, h } = sizeCanvas($("#spectro"));
   const sp = d.spectrogram, nT = sp.t.length, nF = sp.f.length;
-  const left = 0, right = w - 34, top = 4, bottom = h - 4;
+  const left = 0, right = w - GUTTER, top = 4, bottom = h - 4;
   const ws = d.window_start_s, we = d.window_end_s, tx = t => left + (t - ws) / (we - ws) * (right - left);
 
   const vals = [];
@@ -730,6 +750,16 @@ function drawSpectrogram(d) {
     ctx.fillRect(right, y, 4, 1);
     ctx.fillText(String(f), right + 6, Math.min(Math.max(y, top + 6), bottom - 6));
   }
+
+  // colour bar: weak (bottom) to strong (top)
+  const bx = right + 34, bw = 8;
+  for (let y = top; y < bottom; y++) {
+    const [r, g, b] = viridis((bottom - y) / (bottom - top));
+    ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.fillRect(bx, y, bw, 1);
+  }
+  ctx.fillStyle = "rgba(255,255,255,.6)";
+  ctx.textBaseline = "top"; ctx.fillText("High", bx + bw + 4, top);
+  ctx.textBaseline = "bottom"; ctx.fillText("Low", bx + bw + 4, bottom);
 }
 
 /* ------------------------------------------------------------ samples */

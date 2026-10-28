@@ -49,7 +49,7 @@
     <div class="sec-head">
       <span class="sec-num">01</span>
       <h2>Upload &amp; review</h2>
-      <p class="lede">Point IctalX at a recording, run detection, then step through every candidate event and mark it confirmed or rejected.</p>
+      <p class="lede">Point IctalX at a recording, run detection, then step through every candidate event and mark it confirmed or rejected. IctalX can miss seizures.</p>
     </div>
 
     <div class="two-col">
@@ -154,6 +154,12 @@
       <button type="button" id="noticeClose">Dismiss</button>
     </div>
 
+    <div class="alert" id="appError" role="alert" hidden>
+      <div class="t">IctalX failed</div>
+      <div class="m">An error in the app stopped it from working correctly, so results may be missing or incomplete. Reload the page and run the detection again. If it fails again, contact the IctalX team.</div>
+      <div class="s"><code id="appErrorDetail"></code></div>
+    </div>
+
     <!-- ===== Event review (master-detail) ===== -->
     <div class="review-block" id="review" hidden>
       <div class="rb-top">
@@ -189,16 +195,16 @@
           <div class="feat"><div class="fl">Onset</div><div class="fv" id="dOnset">—</div></div>
           <div class="feat"><div class="fl">Offset</div><div class="fv" id="dOffset">—</div></div>
           <div class="feat"><div class="fl">Duration</div><div class="fv" id="dDur">—</div></div>
-          <div class="feat"><div class="fl">Mean probability</div><div class="fv" id="dProb">—</div></div>
+          <div class="feat"><div class="fl">Model confidence</div><div class="fv" id="dProb">—</div></div>
           <div class="feat"><div class="fl">Peak amplitude</div><div class="fv" id="dPeak">—</div></div>
           <div class="feat"><div class="fl">Kurtosis</div><div class="fv" id="dKurt">—</div></div>
           <div class="feat"><div class="fl">Skewness</div><div class="fv" id="dSkew">—</div></div>
           <div class="feat"><div class="fl">Envelope</div><div class="fv" id="dEnv">—</div></div>
         </div>
 
-        <div class="viz-cap"><span>Preprocessed signal · 120 s before onset to 120 s after offset</span><span class="u">z-score · 500 Hz</span></div>
+        <div class="viz-cap"><span>Preprocessed signal · 120 s before onset to 120 s after offset</span></div>
         <canvas id="wave" class="viz" aria-label="Event waveform"></canvas>
-        <div class="viz-cap"><span>Spectrogram · same window</span><span class="u">0–250 Hz · dB</span></div>
+        <div class="viz-cap"><span>Spectrogram · same window</span><span class="u">0–250 Hz</span></div>
         <canvas id="spectro" class="viz" aria-label="Event spectrogram"></canvas>
         <div class="loading" id="vizLoading" hidden>Loading signal…</div>
 
@@ -222,7 +228,7 @@
       <div class="m-scroll">
         <table class="events" aria-label="Detected seizure events">
           <thead>
-            <tr><th>#</th><th>Onset</th><th class="c-off">Offset</th><th>Dur</th><th>Mean p</th><th>Status</th></tr>
+            <tr><th>#</th><th>Onset</th><th class="c-off">Offset</th><th>Duration</th><th>Model confidence</th><th>Status</th></tr>
           </thead>
           <tbody id="evBody"></tbody>
         </table>

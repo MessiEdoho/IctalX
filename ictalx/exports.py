@@ -22,7 +22,7 @@ CSV_COLUMNS = [
     "onset_s", "offset_s", "duration_s",
     "onset_elapsed", "offset_elapsed", "onset_clock", "offset_clock",
     "peak_uV", "kurtosis", "skewness", "envelope_uV",
-    "probability", "status",
+    "model_confidence", "status",
 ]
 
 README = """IctalX results
@@ -35,21 +35,21 @@ events/<id>_spectrogram.png   spectrogram of the same window, seizure outlined i
 
 events.csv columns
 ------------------
-analysis_id     ID of this analysis
-event_id        EV-001, EV-002, ... in time order
-onset_s         event start, seconds from recording start
-offset_s        event end, seconds from recording start
-duration_s      offset_s - onset_s
-onset_elapsed   onset as HHhMMmSS.s from recording start
-offset_elapsed  offset as HHhMMmSS.s from recording start
-onset_clock     onset as date and time (blank if the recording has no start time)
-offset_clock    offset as date and time (blank if the recording has no start time)
-peak_uV         largest absolute value during the event, notch-filtered and mean-removed signal, in microvolts
-kurtosis        excess kurtosis of the preprocessed signal during the event (0 for Gaussian noise)
-skewness        skewness of the preprocessed signal during the event
-envelope_uV     mean Hilbert amplitude envelope during the event, in microvolts
-probability     mean of the smoothed model probabilities of the event's segments
-status          review decision: pending, confirmed or rejected
+analysis_id       ID of this analysis
+event_id          EV-001, EV-002, ... in time order
+onset_s           event start, seconds from recording start
+offset_s          event end, seconds from recording start
+duration_s        offset_s - onset_s
+onset_elapsed     onset as HHhMMmSS.s from recording start
+offset_elapsed    offset as HHhMMmSS.s from recording start
+onset_clock       onset as date and time (blank if the recording has no start time)
+offset_clock      offset as date and time (blank if the recording has no start time)
+peak_uV           largest absolute value during the event, notch-filtered and mean-removed signal, in microvolts
+kurtosis          excess kurtosis of the preprocessed signal during the event (0 for Gaussian noise)
+skewness          skewness of the preprocessed signal during the event
+envelope_uV       mean Hilbert amplitude envelope during the event, in microvolts
+model_confidence  mean of the smoothed model probabilities of the event's segments
+status            review decision: pending, confirmed or rejected
 
 IctalX is a research aid for mouse EEG. It does not diagnose and is not a clinical device.
 
@@ -74,7 +74,7 @@ def event_rows(a):
             "kurtosis": round(e["kurtosis"], 4),
             "skewness": round(e["skewness"], 4),
             "envelope_uV": round(e["envelope_uV"], 3),
-            "probability": round(e["mean_prob"], 6),
+            "model_confidence": round(e["mean_prob"], 6),
             "status": a.decisions[e["event_id"]],
         })
     return rows
@@ -170,7 +170,8 @@ def spectrogram_png(window, event_id):
     ax.set_xlabel("Time from recording start (s)")
     ax.set_ylabel("Frequency (Hz)")
     ax.set_title(f"{event_id}: spectrogram, same window")
-    fig.colorbar(mesh, ax=ax, label="Power (dB)")
+    bar = fig.colorbar(mesh, ax=ax, label="Power")
+    bar.set_ticks(mesh.get_clim(), labels=["Low", "High"])
     fig.tight_layout()
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=120)
