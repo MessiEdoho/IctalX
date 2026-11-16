@@ -2,8 +2,10 @@
 
 There is no database. An analysis lives until it has been idle for the session
 length or the server restarts. The uploaded file is deleted as soon as its
-analysis finishes, fails or is cancelled.
+analysis finishes, fails or is cancelled; files left by a server that stopped
+during a detection are deleted when the server next starts.
 """
+import re
 import secrets
 import threading
 import time
@@ -95,6 +97,25 @@ def delete_upload(a):
     if a.upload_path is not None:
         Path(a.upload_path).unlink(missing_ok=True)
         a.upload_path = None
+
+
+UPLOAD_NAME = re.compile(r"[0-9a-f]{32}(\.[^.]*)?")      # names given by server._save_upload
+
+
+def remove_leftover_uploads(upload_dir):
+    """Delete uploads left behind when the server stopped during a detection.
+
+    Analyses are held in memory only, so after a restart no job can use these files.
+    Only files named by server._save_upload are removed; anything else in the folder
+    is kept. One server per upload folder: a second server using the same folder
+    would lose the file of a detection it is running.
+    """
+    removed = []
+    for p in Path(upload_dir).iterdir():
+        if p.is_file() and not p.is_symlink() and UPLOAD_NAME.fullmatch(p.name):
+            p.unlink(missing_ok=True)
+            removed.append(p.name)
+    return removed
 
 
 class JobRunner:

@@ -38,6 +38,8 @@ async def lifespan(app):
     s = load_settings()
     State.settings = s
     s.upload_dir.mkdir(parents=True, exist_ok=True)
+    for name in jobs.remove_leftover_uploads(s.upload_dir):
+        print(f"Removed leftover upload {name}", flush=True)
     State.model = pipeline.load_model(s.model_dir, s.device)     # refuses to start on a checksum mismatch
     State.model_sha256 = pipeline.WEIGHTS_SHA256
     State.store = jobs.AnalysisStore(session_seconds=s.session_hours * 3600)

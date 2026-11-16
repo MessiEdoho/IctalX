@@ -321,7 +321,7 @@ There is no database.
 
 | Item | Where | How long |
 | --- | --- | --- |
-| Uploaded file | Temporary folder on the server | Deleted as soon as detection ends, or at once if rejected |
+| Uploaded file | Temporary folder on the server | Deleted as soon as detection ends, or at once if rejected. Files left by a server that stopped during a detection are deleted at the next start |
 | Event table, event windows, decisions | Server memory, keyed by analysis ID | Until the session expires (3 hours with no activity) or the server restarts |
 | Long-term record | `events.csv` and the report zip, downloaded by the researcher | Kept by the researcher |
 
@@ -516,6 +516,7 @@ Read from environment variables (`ictalx/config.py`), so the same code runs loca
 | Pipeline | Run reference recordings through the app and through the training scripts | Identical event lists and probabilities |
 | Validation | One test file per rejection code | Correct code and message |
 | Deletion | Check the temporary folder after detection and after rejection | No uploaded file remains |
+| Leftover uploads | Start the server with leftover and unrelated files in the upload folder | Only the leftover uploads are deleted |
 | Event windows | Events near the start, middle and end of a recording | Correct window bounds and highlighted span |
 | Interface | Review flow, Save / Discard / Stay prompt, keyboard use, export contents | Manual checklist plus automated browser tests |
 | Docker | Build the image and run the reference test inside it | Same results as local |
