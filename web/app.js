@@ -285,7 +285,7 @@ function startDetection() {
 
   const xhr = new XMLHttpRequest();
   S.xhr = xhr;
-  xhr.open("POST", "/api/detect");
+  xhr.open("POST", "api/detect");
   xhr.upload.onprogress = e => { if (e.lengthComputable) $("#upPct").textContent = Math.round(100 * e.loaded / e.total) + "%"; };
   xhr.upload.onload = () => { $("#upPct").textContent = "100%"; setStep("validate"); };
   xhr.onload = () => {
@@ -321,7 +321,7 @@ async function poll() {
   S.pollTimer = null;
   let body;
   try {
-    const r = await fetch(`/api/analyses/${S.analysisId}`);
+    const r = await fetch(`api/analyses/${S.analysisId}`);
     if (r.status === 404) { endProgress(); toast("This analysis has expired."); return; }
     body = await r.json();
   } catch (e) {
@@ -358,7 +358,7 @@ async function poll() {
 async function cancelDetection() {
   if (S.xhr) { S.xhr.abort(); return; }
   if (S.analysisId) {
-    try { await fetch(`/api/analyses/${S.analysisId}/cancel`, { method: "POST" }); } catch (e) { /* poll will report */ }
+    try { await fetch(`api/analyses/${S.analysisId}/cancel`, { method: "POST" }); } catch (e) { /* poll will report */ }
     $("#cancelBtn").disabled = true;
     setTimeout(() => { $("#cancelBtn").disabled = false; }, 2000);
   }
@@ -392,8 +392,8 @@ function showResults(body) {
   S.result = body;
   S.events = body.events;
   const id = encodeURIComponent(body.analysis_id);
-  $("#dlCsv").href = `/api/report?analysis_id=${id}&format=csv`;
-  $("#dlZip").href = `/api/report?analysis_id=${id}&format=zip`;
+  $("#dlCsv").href = `api/report?analysis_id=${id}&format=csv`;
+  $("#dlZip").href = `api/report?analysis_id=${id}&format=zip`;
   $("#review").hidden = false;
   $("#sessionNotice").hidden = sessionStorageGet("noticeDismissed") === "1";
   $("#noEvents").hidden = S.events.length > 0;
@@ -522,7 +522,7 @@ async function saveReview() {
   if (!S.selected || !S.draft) return true;
   const e = S.events.find(x => x.event_id === S.selected);
   try {
-    const r = await fetch("/api/review", {
+    const r = await fetch("api/review", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ analysis_id: S.result.analysis_id, event_id: e.event_id, status: S.draft }),
     });
@@ -594,7 +594,7 @@ async function loadWindow(id) {
   if (!S.windows[id]) {
     msg.textContent = "Loading signal…"; msg.hidden = false;
     try {
-      const r = await fetch(`/api/events/${S.result.analysis_id}/${id}`);
+      const r = await fetch(`api/events/${S.result.analysis_id}/${id}`);
       if (!r.ok) throw new Error();
       S.windows[id] = await r.json();
     } catch (e) {
@@ -766,14 +766,14 @@ function drawSpectrogram(d) {
 async function loadSamples() {
   const box = $("#sampleList");
   try {
-    const r = await fetch("/api/samples");
+    const r = await fetch("api/samples");
     const { samples } = await r.json();
     box.innerHTML = "";
     if (!samples.length) { box.appendChild(el("div", "hint", "No sample files are available yet.")); return; }
     samples.forEach(s => {
       const row = el("div", "samplerow");
       row.append(el("span", "fi", s.name), el("span", "meta", s.name.split(".").pop().toUpperCase() + " · " + humanSize(s.bytes)));
-      const a = el("a", null, "Download"); a.href = `/api/samples/${encodeURIComponent(s.name)}`; a.setAttribute("download", s.name);
+      const a = el("a", null, "Download"); a.href = `api/samples/${encodeURIComponent(s.name)}`; a.setAttribute("download", s.name);
       row.appendChild(a); box.appendChild(row);
     });
   } catch (e) {
