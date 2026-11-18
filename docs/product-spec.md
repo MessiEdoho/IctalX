@@ -450,6 +450,7 @@ Implemented in `web/index.html`, `web/style.css` and `web/app.js`.
 | Starting a new analysis | Asks for confirmation if results are on screen |
 | Leaving the page | Browser warning if a draft is unsaved, a job is running, or results have not been downloaded since the last change |
 | Fonts | Loaded from Google Fonts for now; self-hosting is still to do (section 11) |
+| Web address | The page and its requests use relative addresses (`api/...`, `static/...`), so IctalX works at its own address or under a sub-path such as `https://lifescience.ucd.ie/IctalX/`. Under a sub-path the address must end with `/`, and the gateway must remove the sub-path before passing requests to IctalX |
 | App failure | Any uncaught error in the page shows a red "IctalX failed" box above the review card, asking the user to reload and run the detection again, with the technical error underneath. The half-filled detail view and table are hidden, so a failure is never mistaken for "no events". Downloads stay available |
 
 ## 11. Data handling and security
@@ -503,7 +504,7 @@ Read from environment variables (`ictalx/config.py`), so the same code runs loca
 | Area | Requirement |
 | --- | --- |
 | Accuracy | Same events as the training codebase on the reference recordings (section 14). |
-| Performance | Measured on CPU: about 75 segments per second (19 minutes per recorded day; 87 minutes for m427). Detection must run as a background job with progress, not inside one web request. |
+| Performance | Measured on CPU: about 75 segments per second (7.7 minutes per recorded day; 87 minutes for m427). Detection must run as a background job with progress, not inside one web request. |
 | Memory | Read only the chosen channel, block by block. Do not call MNE `get_data` on a long recording: it builds a time index for the whole file (3.65 GB for m427). Free the signal once event windows are cut. |
 | Concurrent use (UCD) | Several users at once; analyses are queued if the server is busy. Limits **TBC** with UCD. |
 | Browsers | Current Chrome, Edge, Firefox and Safari. |
@@ -529,7 +530,7 @@ Reference recordings and their expected outputs come from the training codebase.
 | --- | --- |
 | Setup | CPU only, Intel Core Ultra 9 185H, 16 threads, PyTorch 2.10 (CPU), checksum-verified copy of the weights, model frozen |
 | Segments | 392,311 (272.4 h) |
-| Time | 87.4 min in total: 5,176 s inference, 47 s preprocessing, 18 s reading. About 75 segments per second, roughly 19 minutes per recorded day |
+| Time | 87.4 min in total: 5,176 s inference, 47 s preprocessing, 18 s reading. About 75 segments per second, roughly 7.7 minutes per recorded day |
 | Reference events | All 12 reproduced exactly: onset, offset, duration, mean and max probability to 6 decimals |
 | Extra events, first pass | 3, at 4,400 s, 530,205 s and 531,252.5 s, when the 61 extreme segments were clipped instead of removed |
 | With the production filter | 61 segments removed, 392,250 kept, 4 chunks. 12 events, identical to the reference; difference in mean and max probability 0.0 |
