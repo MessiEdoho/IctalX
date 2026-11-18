@@ -450,7 +450,7 @@ Implemented in `web/index.html`, `web/style.css` and `web/app.js`.
 | Starting a new analysis | Asks for confirmation if results are on screen |
 | Leaving the page | Browser warning if a draft is unsaved, a job is running, or results have not been downloaded since the last change |
 | Fonts | Loaded from Google Fonts for now; self-hosting is still to do (section 11) |
-| Web address | The page and its requests use relative addresses (`api/...`, `static/...`), so IctalX works at its own address or under a sub-path such as `https://lifescience.ucd.ie/IctalX/`. Under a sub-path the address must end with `/`, and the gateway must remove the sub-path before passing requests to IctalX |
+| Web address | The page and its requests use relative addresses (`api/...`, `static/...`), so IctalX works at its own address or under a sub-path. On lisda it runs at `https://lisda.ucd.ie/ictalx/`: nginx sends `/ictalx` to `/ictalx/` (the address must end with `/`) and removes `/ictalx` before passing requests to IctalX |
 | App failure | Any uncaught error in the page shows a red "IctalX failed" box above the review card, asking the user to reload and run the detection again, with the technical error underneath. The half-filled detail view and table are hidden, so a failure is never mistaken for "no events". Downloads stay available |
 
 ## 11. Data handling and security
